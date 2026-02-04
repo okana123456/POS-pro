@@ -1,78 +1,85 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>POS System</title>
-    <link rel='stylesheet' href='styles.css'>
-    <script src='https://cdn.emailjs.com/dist/email.min.js'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DukaPOS Pro</title>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <style>
+        /* Add desired styling here */
+    </style>
 </head>
 <body>
-    <div class='dark-mode'>
-        <header>
-            <h1>Point of Sale System</h1>
-        </header>
-        <main>
-            <section id='admin-user-creation'>
-                <h2>Create User</h2>
-                <form id='create-user-form'>
-                    <input type='text' id='username' placeholder='Username' required>
-                    <input type='email' id='email' placeholder='Email' required>
-                    <button type='submit'>Create User</button>
-                </form>
-            </section>
-            <section id='email-verification'>
-                <h2>Email Verification</h2>
-                <div id='verification-message'></div>
-            </section>
-            <section id='m-pesa'>
-                <h2>M-Pesa Payment</h2>
-                <form id='mpesa-payment-form'>
-                    <input type='text' id='phone-number' placeholder='Phone Number' required>
-                    <button type='submit'>Pay</button>
-                </form>
-            </section>
-            <section id='inventory'>
-                <h2>Inventory Management</h2>
-                <input type='text' id='sku' placeholder='SKU Code' disabled>
-                <button id='generate-sku'>Generate SKU</button>
-            </section>
-            <section id='client-onboarding'>
-                <h2>Client Onboarding</h2>
-                <button id='quick-onboarding'>Start Onboarding</button>
-            </section>
-        </main>
-        <footer>
-            <p>&copy; 2026</p>
-        </footer>
+    <h1>Welcome to DukaPOS Pro</h1>
+
+    <!-- Admin user creation form (Admin only) -->
+    <div id="admin-creation">
+        <h2>Create Admin User</h2>
+        <input type="email" id="admin-email" placeholder="Admin Email" required>
+        <button id="create-admin">Create Admin</button>
     </div>
+
+    <!-- Improved M-Pesa Payment section -->
+    <div id="payment-section">
+        <h2>M-Pesa Payment</h2>
+        <input type="text" id="mpesa-phone" placeholder="Enter Kenyan Phone Number" required>
+        <button id="make-payment">Pay</button>
+    </div>
+
+    <!-- Inventory Management section -->
+    <div id="inventory-section">
+        <h2>Inventory Management</h2>
+        <input type="text" id="product-sku" placeholder="Product SKU (Leave blank to auto-generate)">
+        <button id="add-product">Add Product</button>
+    </div>
+
+    <!-- Client Onboarding section -->
+    <div id="onboarding-section">
+        <h2>Client Onboarding</h2>
+        <button id="bulk-add">Bulk Add Products</button>
+    </div>
+
     <script>
-        emailjs.init('YOUR_USER_ID');
+        // Full setup instructions here...
 
-        document.getElementById('create-user-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-
-            // Create user with pending status logic here
-
-            // Send email verification
-            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-            emailjs.send('service_id', 'template_id', { username, email, code: verificationCode })
-                .then(response => {
-                    document.getElementById('verification-message').innerText = 'Verification email sent!';
-                });
+        // Function to create admin user
+        document.getElementById('create-admin').addEventListener('click', function() {
+            const email = document.getElementById('admin-email').value;
+            // EmailJS integration for sending verification email
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', { to_email: email })
+            .then(function(response) {
+                console.log('Verification Email Sent', response.status);
+            }, function(error) {
+                console.error('Failed to send email:', error);
+            });
         });
 
-        document.getElementById('mpesa-payment-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const phone = document.getElementById('phone-number').value;
-            // Phone validation and payment processing logic here
+        // Function to validate phone number for M-Pesa
+        document.getElementById('make-payment').addEventListener('click', function() {
+            const phone = document.getElementById('mpesa-phone').value;
+            const phoneRegex = /^[0]{1}[1-9]{1}[0-9]{8}$/; // Kenyan phone number validation
+            if (phoneRegex.test(phone)) {
+                // Proceed with payment flow
+                console.log('Payment Successful for:', phone);
+            } else {
+                alert('Invalid Kenyan phone number.');
+            }
         });
 
-        document.getElementById('generate-sku').addEventListener('click', function() {
-            // SKU generation logic here
+        // Function to handle inventory addition
+        document.getElementById('add-product').addEventListener('click', function() {
+            let sku = document.getElementById('product-sku').value;
+            if (!sku) {
+                sku = 'SKU-' + Math.floor(Math.random() * 10000);
+            }
+            // Add product to inventory (localStorage) logic here...
+            console.log('Product added with SKU:', sku);
         });
 
-        document.getElementById('quick-onboarding').addEventListener('click', function() {
-            // Onboarding logic here
+        // Function to handle bulk onboarding
+        document.getElementById('bulk-add').addEventListener('click', function() {
+            // Logic for client onboarding and bulk product addition here...
+            console.log('Bulk client onboarding initiated.');
         });
     </script>
 </body>
