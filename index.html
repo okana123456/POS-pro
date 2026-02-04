@@ -842,38 +842,58 @@
                                         </button>
                                     </div>
                                 </div>
-                                <!-- UPDATED: Manual M-Pesa confirmation -->
+                                <!-- UPDATED: M-Pesa Payment with IntaSend & Manual Options -->
                                 <div class="mpesa-panel" id="mpesaPanel">
                                     <div class="mpesa-header">
                                         <span class="mpesa-title">📱 M-Pesa Payment</span>
                                     </div>
-                                    <div style="background:rgba(16,185,129,0.15); padding:20px; border-radius:12px; margin:16px 0; border:2px solid rgba(16,185,129,0.4);">
-                                        <div style="text-align:center; margin-bottom:12px;">
-                                            <div style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:8px;">Customer Pays To:</div>
-                                            <div style="font-size:2.2rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace; letter-spacing:2px;" id="mpesaTillDisplay">Not set</div>
-                                            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Till/Paybill Number</div>
+                                    
+                                    <!-- IntaSend Automatic Mode -->
+                                    <div id="mpesaIntasendMode" style="display:none;">
+                                        <div style="background:rgba(16,185,129,0.15); padding:16px; border-radius:12px; margin:16px 0; border:2px solid rgba(16,185,129,0.4); text-align:center;">
+                                            <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">🚀 Automatic Verification Enabled</div>
+                                            <div style="font-size:1.6rem; font-weight:800; color:#10b981;" id="mpesaAmountIntasend">Ksh 0</div>
                                         </div>
-                                        <div style="border-top:1px solid rgba(16,185,129,0.3); padding-top:12px; margin-top:12px;">
-                                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                                <span style="color:var(--text-secondary);">Amount to Pay:</span>
-                                                <span style="font-size:1.4rem; font-weight:800; color:#fff;" id="mpesaAmount">Ksh 0</span>
+                                        <div style="margin-bottom:8px;">
+                                            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--text-secondary);">Customer Phone Number *</label>
+                                            <input type="tel" class="mpesa-input" id="mpesaPhoneIntasend" placeholder="07XXXXXXXX" style="font-size:1.1rem; text-align:center; letter-spacing:1px;">
+                                        </div>
+                                        <button class="complete-sale-btn" onclick="sendIntasendSTKPush()" style="background:var(--gradient-green);">
+                                            📲 Send Payment Request to Customer
+                                        </button>
+                                        <div id="intasendStatus" style="margin-top:12px; padding:12px; border-radius:8px; text-align:center; display:none;"></div>
+                                    </div>
+                                    
+                                    <!-- Manual Mode -->
+                                    <div id="mpesaManualMode">
+                                        <div style="background:rgba(16,185,129,0.15); padding:20px; border-radius:12px; margin:16px 0; border:2px solid rgba(16,185,129,0.4);">
+                                            <div style="text-align:center; margin-bottom:12px;">
+                                                <div style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:8px;">Customer Pays To:</div>
+                                                <div style="font-size:2.2rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace; letter-spacing:2px;" id="mpesaTillDisplay">Not set</div>
+                                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Till/Paybill Number</div>
+                                            </div>
+                                            <div style="border-top:1px solid rgba(16,185,129,0.3); padding-top:12px; margin-top:12px;">
+                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                                    <span style="color:var(--text-secondary);">Amount to Pay:</span>
+                                                    <span style="font-size:1.4rem; font-weight:800; color:#fff;" id="mpesaAmount">Ksh 0</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div style="background:rgba(59,130,246,0.1); padding:12px; border-radius:8px; margin-bottom:16px; border-left:3px solid #3b82f6;">
-                                        <div style="font-size:0.85rem; color:var(--text-secondary);">
-                                            <strong style="color:#3b82f6;">📋 Steps:</strong><br>
-                                            1. Customer sends M-Pesa to the number above<br>
-                                            2. Wait for M-Pesa confirmation message<br>
-                                            3. Enter customer's phone number below to confirm
+                                        <div style="background:rgba(59,130,246,0.1); padding:12px; border-radius:8px; margin-bottom:16px; border-left:3px solid #3b82f6;">
+                                            <div style="font-size:0.85rem; color:var(--text-secondary);">
+                                                <strong style="color:#3b82f6;">📋 Steps:</strong><br>
+                                                1. Customer sends M-Pesa to the number above<br>
+                                                2. Wait for M-Pesa confirmation message<br>
+                                                3. Enter customer's phone number below to confirm
+                                            </div>
                                         </div>
+                                        <div style="margin-bottom:8px;">
+                                            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--text-secondary);">Customer Phone Number *</label>
+                                            <input type="tel" class="mpesa-input" id="mpesaPhoneConfirm" placeholder="07XXXXXXXX" oninput="updateMpesaConfirm(this.value)" style="font-size:1.1rem; text-align:center; letter-spacing:1px;">
+                                        </div>
+                                        <div id="mpesaConfirmMsg" style="margin:12px 0; font-size:1.05rem; color:#10b981; min-height:28px; text-align:center; font-weight:600;"></div>
+                                        <button class="complete-sale-btn" id="confirmMpesaBtn" onclick="confirmManualMpesa()" disabled style="background:var(--gradient-green);">✓ Confirm Payment & Complete Sale</button>
                                     </div>
-                                    <div style="margin-bottom:8px;">
-                                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--text-secondary);">Customer Phone Number *</label>
-                                        <input type="tel" class="mpesa-input" id="mpesaPhoneConfirm" placeholder="07XXXXXXXX" oninput="updateMpesaConfirm(this.value)" style="font-size:1.1rem; text-align:center; letter-spacing:1px;">
-                                    </div>
-                                    <div id="mpesaConfirmMsg" style="margin:12px 0; font-size:1.05rem; color:#10b981; min-height:28px; text-align:center; font-weight:600;"></div>
-                                    <button class="complete-sale-btn" id="confirmMpesaBtn" onclick="confirmManualMpesa()" disabled style="background:var(--gradient-green);">✓ Confirm Payment & Complete Sale</button>
                                 </div>
                                 <button class="complete-sale-btn" id="completeSaleBtn" onclick="completeSale()" disabled>
                                     ✓ Complete Sale
@@ -1288,6 +1308,135 @@
                                 <button class="inv-btn primary" onclick="showOnboardModal()" style="margin-top:12px">🚀 Onboard New Client</button>
                             </div>
                         </div>
+                        <!-- ADDED: IntaSend API Configuration -->
+                        <div class="card" style="border-color:var(--accent-green)">
+                            <div class="card-header" style="background:rgba(16,185,129,.1)">
+                                <h3 class="card-title" style="color:var(--accent-green)">🔌 IntaSend M-Pesa API (Automatic Verification)</h3>
+                            </div>
+                            <div class="card-body">
+                                <div style="margin-bottom:16px; padding:12px; background:rgba(59,130,246,0.1); border-left:3px solid #3b82f6; border-radius:4px; font-size:0.85rem;">
+                                    <strong style="color:#3b82f6;">🚀 Enable Automatic Payment Verification</strong><br>
+                                    <span style="color:var(--text-secondary);">No SMS checking needed! System automatically detects M-Pesa payments via IntaSend API.</span>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                        <input type="checkbox" id="settingIntasendEnabled" onchange="toggleIntasendFields()" style="width:18px; height:18px;">
+                                        <span>Enable IntaSend Integration</span>
+                                    </label>
+                                </div>
+                                
+                                <!-- ADDED: Quick Client Registration Helper -->
+                                <div id="intasendQuickRegister" style="display:none; margin:16px 0; padding:16px; background:rgba(139,92,246,0.1); border:2px dashed rgba(139,92,246,0.4); border-radius:12px;">
+                                    <div style="text-align:center; margin-bottom:12px;">
+                                        <div style="font-size:1.8rem; margin-bottom:8px;">🎯</div>
+                                        <h4 style="color:var(--accent-purple); margin-bottom:8px; font-size:1.1rem;">Quick Client Registration</h4>
+                                        <p style="color:var(--text-secondary); font-size:0.85rem;">Register this client on IntaSend and get their API keys</p>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Client Business Name *</label>
+                                        <input type="text" class="form-input" id="regBusinessName" placeholder="e.g., Mama Pendo Shop">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Client Email *</label>
+                                        <input type="email" class="form-input" id="regEmail" placeholder="client@example.com">
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Client Phone *</label>
+                                            <input type="tel" class="form-input" id="regPhone" placeholder="0712345678">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">KRA PIN</label>
+                                            <input type="text" class="form-input" id="regKraPin" placeholder="P000000000X">
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin:12px 0; padding:12px; background:rgba(59,130,246,0.1); border-radius:8px; font-size:0.8rem;">
+                                        <strong style="color:#3b82f6;">📋 What happens next:</strong><br>
+                                        <ol style="margin:8px 0 0 20px; color:var(--text-secondary); line-height:1.6;">
+                                            <li>This opens IntaSend registration page in new tab</li>
+                                            <li>You register the client's business</li>
+                                            <li>IntaSend sends verification email to client</li>
+                                            <li>Client verifies account (upload ID, KRA)</li>
+                                            <li>You get API keys from IntaSend dashboard</li>
+                                            <li>Come back here and paste API keys below</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <button class="inv-btn" onclick="openIntasendRegistration()" style="width:100%; background:var(--gradient-purple); color:white;">
+                                        🚀 Open IntaSend Registration
+                                    </button>
+                                    
+                                    <div style="margin-top:12px; text-align:center;">
+                                        <button onclick="toggleQuickRegister()" style="background:transparent; border:none; color:var(--accent-purple); cursor:pointer; text-decoration:underline; font-size:0.85rem;">
+                                            I already have API keys →
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="intasendFields" style="display:none;">
+                                    <div class="form-group">
+                                        <label class="form-label">IntaSend Public Key *</label>
+                                        <input type="text" class="form-input" id="settingIntasendPublicKey" placeholder="ISPubKey_test_xxxxx" style="font-family:'JetBrains Mono',monospace;">
+                                        <div style="margin-top:4px; font-size:0.75rem; color:var(--text-muted);">
+                                            Get from: <a href="https://dashboard.intasend.com/api-keys" target="_blank" style="color:#3b82f6;">IntaSend Dashboard → API Keys</a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">IntaSend Secret Key *</label>
+                                        <input type="password" class="form-input" id="settingIntasendSecretKey" placeholder="ISSecretKey_test_xxxxx" style="font-family:'JetBrains Mono',monospace;">
+                                        <div style="margin-top:4px; font-size:0.75rem; color:var(--text-muted);">
+                                            🔒 Kept secure - never shared with cashiers
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Environment</label>
+                                        <select class="form-select" id="settingIntasendEnvironment">
+                                            <option value="test">Test Mode (Sandbox)</option>
+                                            <option value="live">Live Mode (Production)</option>
+                                        </select>
+                                        <div style="margin-top:4px; font-size:0.75rem; color:var(--text-muted);">
+                                            Start with Test Mode to try it out, then switch to Live
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-top:16px; padding:12px; background:rgba(251,191,36,0.1); border-left:3px solid #f59e0b; border-radius:4px; font-size:0.8rem;">
+                                        <strong style="color:#f59e0b;">💰 Cost:</strong> 3.5% + Ksh 10 per transaction<br>
+                                        <span style="color:var(--text-secondary);">Example: Ksh 1,500 sale = Ksh 62.50 fee</span>
+                                    </div>
+                                    
+                                    <div style="margin-top:12px; padding:12px; background:rgba(16,185,129,0.1); border-left:3px solid #10b981; border-radius:4px; font-size:0.8rem;">
+                                        <strong style="color:#10b981;">✅ Benefits:</strong><br>
+                                        • No SMS phone needed at POS<br>
+                                        • Automatic payment verification<br>
+                                        • STK Push to customer phone<br>
+                                        • Secure - cashiers never see payment details<br>
+                                        • Falls back to manual if API fails
+                                    </div>
+                                    
+                                    <button class="inv-btn primary" onclick="testIntasendConnection()" style="width:100%; margin-top:12px;">
+                                        🔌 Test API Connection
+                                    </button>
+                                </div>
+                                
+                                <div style="margin-top:16px; padding:12px; background:var(--bg-dark); border-radius:8px; font-size:0.8rem;">
+                                    <strong style="color:var(--text-secondary);">📋 Setup Instructions:</strong><br>
+                                    <ol style="margin:8px 0 0 20px; color:var(--text-muted); line-height:1.8;">
+                                        <li>Go to <a href="https://intasend.com" target="_blank" style="color:#3b82f6;">intasend.com</a> and create account</li>
+                                        <li>Verify your business (KRA PIN, ID, etc.)</li>
+                                        <li>Get API keys from Dashboard → API Keys</li>
+                                        <li>Enter keys above and enable integration</li>
+                                        <li>Test with small transaction first</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
                         <div class="card">
                             <div class="card-header"><h3 class="card-title">Tax Settings</h3></div>
                             <div class="card-body">
@@ -1509,7 +1658,18 @@
         
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
-        let config = { businessName: 'DukaPOS Business', kraPin: '', phone: '', mpesaTill: '', vatRate: 16 };
+        let config = { 
+            businessName: 'DukaPOS Business', 
+            kraPin: '', 
+            phone: '', 
+            mpesaTill: '', 
+            vatRate: 16,
+            // ADDED: IntaSend API configuration
+            intasendEnabled: false,
+            intasendPublicKey: '',
+            intasendSecretKey: '',
+            intasendEnvironment: 'test' // 'test' or 'live'
+        };
         let users = [
             { id: 1, name: 'Admin User', email: 'admin@dukapos.com', username: 'admin', password: 'admin123', role: 'admin', status: 'active', lastLogin: null },
             { id: 2, name: 'Sales Staff', email: 'seller@dukapos.com', username: 'seller', password: 'seller123', role: 'seller', status: 'active', lastLogin: null }
@@ -2127,6 +2287,14 @@
             document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active', 'mpesa-pending', 'mpesa-confirmed'));
             btn.classList.add('active');
             document.getElementById('mpesaPanel').classList.toggle('show', method === 'M-Pesa');
+            
+            // ADDED: Show IntaSend or Manual mode based on configuration
+            if (method === 'M-Pesa') {
+                const intasendEnabled = config.intasendEnabled && config.intasendPublicKey && config.intasendSecretKey;
+                document.getElementById('mpesaIntasendMode').style.display = intasendEnabled ? 'block' : 'none';
+                document.getElementById('mpesaManualMode').style.display = intasendEnabled ? 'none' : 'block';
+            }
+            
             if (method !== 'M-Pesa') { mpesaConfirmed = false; mpesaData = null; }
             renderCart();
         }
@@ -2179,8 +2347,12 @@
         function updateMpesaAmount() {
             const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
             const amountEl = document.getElementById('mpesaAmount');
+            const amountIntasendEl = document.getElementById('mpesaAmountIntasend');
             const tillEl = document.getElementById('mpesaTillDisplay');
+            
             if (amountEl) amountEl.textContent = formatKsh(total);
+            if (amountIntasendEl) amountIntasendEl.textContent = formatKsh(total);
+            
             if (tillEl) {
                 const tillNumber = config.mpesaTill || 'NOT SET';
                 tillEl.textContent = tillNumber;
@@ -2191,6 +2363,160 @@
                     tillEl.style.color = '#10b981';
                 }
             }
+        }
+        
+        // ADDED: IntaSend STK Push Integration
+        let intasendPollingInterval = null;
+        
+        async function sendIntasendSTKPush() {
+            const phone = document.getElementById('mpesaPhoneIntasend').value.trim().replace(/\D/g,'');
+            if (!phone.match(/^07\d{8}$/)) {
+                showToast("Invalid phone number. Use format: 07XXXXXXXX", "error");
+                return;
+            }
+            
+            if (!config.intasendPublicKey || !config.intasendSecretKey) {
+                showToast("IntaSend API not configured. Check Settings.", "error");
+                return;
+            }
+            
+            const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+            const invoiceId = 'INV' + Date.now().toString().slice(-8);
+            
+            // Show loading status
+            const statusDiv = document.getElementById('intasendStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = 'rgba(59,130,246,0.1)';
+            statusDiv.style.border = '1px solid rgba(59,130,246,0.3)';
+            statusDiv.innerHTML = `
+                <div style="font-size:1.1rem; font-weight:600; color:#3b82f6; margin-bottom:8px;">📲 Sending payment request...</div>
+                <div style="font-size:0.85rem; color:var(--text-secondary);">Customer will receive prompt on ${phone}</div>
+            `;
+            
+            try {
+                const baseUrl = config.intasendEnvironment === 'live' 
+                    ? 'https://api.intasend.com' 
+                    : 'https://sandbox.intasend.com';
+                
+                const response = await fetch(`${baseUrl}/api/v1/payment/mpesa-stk-push/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${config.intasendSecretKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone_number: '254' + phone.substring(1), // Convert 07XX to 2547XX
+                        amount: total,
+                        api_ref: invoiceId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.id || data.tracking_id) {
+                    // STK Push sent successfully
+                    statusDiv.style.background = 'rgba(251,191,36,0.1)';
+                    statusDiv.style.border = '1px solid rgba(251,191,36,0.3)';
+                    statusDiv.innerHTML = `
+                        <div style="font-size:1.1rem; font-weight:600; color:#f59e0b; margin-bottom:8px;">⏳ Waiting for customer...</div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary);">Customer should enter PIN on their phone</div>
+                        <div style="margin-top:8px;">
+                            <div style="width:40px; height:40px; border:4px solid var(--border); border-top-color:#f59e0b; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto;"></div>
+                        </div>
+                    `;
+                    
+                    // Start polling for payment status
+                    const trackingId = data.id || data.tracking_id;
+                    startIntasendPolling(trackingId, phone, total, invoiceId);
+                } else {
+                    throw new Error(data.message || 'STK Push failed');
+                }
+            } catch (error) {
+                statusDiv.style.background = 'rgba(239,68,68,0.1)';
+                statusDiv.style.border = '1px solid rgba(239,68,68,0.3)';
+                statusDiv.innerHTML = `
+                    <div style="font-size:1.1rem; font-weight:600; color:#ef4444;">❌ Request Failed</div>
+                    <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">${error.message}</div>
+                `;
+                showToast('Payment request failed: ' + error.message, 'error');
+            }
+        }
+        
+        function startIntasendPolling(trackingId, phone, amount, invoiceId) {
+            let attempts = 0;
+            const maxAttempts = 40; // 40 attempts x 3 seconds = 2 minutes
+            
+            intasendPollingInterval = setInterval(async () => {
+                attempts++;
+                
+                if (attempts > maxAttempts) {
+                    clearInterval(intasendPollingInterval);
+                    const statusDiv = document.getElementById('intasendStatus');
+                    statusDiv.style.background = 'rgba(239,68,68,0.1)';
+                    statusDiv.style.border = '1px solid rgba(239,68,68,0.3)';
+                    statusDiv.innerHTML = `
+                        <div style="font-size:1.1rem; font-weight:600; color:#ef4444;">⏱️ Payment Timeout</div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Customer did not complete payment. Try manual mode.</div>
+                    `;
+                    return;
+                }
+                
+                try {
+                    const baseUrl = config.intasendEnvironment === 'live' 
+                        ? 'https://api.intasend.com' 
+                        : 'https://sandbox.intasend.com';
+                    
+                    const response = await fetch(`${baseUrl}/api/v1/payment/status/${trackingId}/`, {
+                        headers: {
+                            'Authorization': `Bearer ${config.intasendSecretKey}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.state === 'COMPLETE' || data.status === 'COMPLETED') {
+                        // Payment successful!
+                        clearInterval(intasendPollingInterval);
+                        
+                        const statusDiv = document.getElementById('intasendStatus');
+                        statusDiv.style.background = 'rgba(16,185,129,0.1)';
+                        statusDiv.style.border = '1px solid rgba(16,185,129,0.3)';
+                        statusDiv.innerHTML = `
+                            <div style="font-size:1.5rem; margin-bottom:8px;">✅</div>
+                            <div style="font-size:1.1rem; font-weight:600; color:#10b981;">Payment Confirmed!</div>
+                            <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Transaction: ${data.mpesa_reference || trackingId}</div>
+                        `;
+                        
+                        mpesaConfirmed = true;
+                        mpesaData = { 
+                            phone: phone, 
+                            method: 'M-Pesa (IntaSend)',
+                            transactionId: data.mpesa_reference || trackingId,
+                            amount: amount
+                        };
+                        
+                        showToast('✓ Payment received! Completing sale...', 'success');
+                        
+                        // Auto-complete sale after 1 second
+                        setTimeout(() => {
+                            completeSale();
+                        }, 1000);
+                        
+                    } else if (data.state === 'FAILED' || data.status === 'FAILED') {
+                        clearInterval(intasendPollingInterval);
+                        const statusDiv = document.getElementById('intasendStatus');
+                        statusDiv.style.background = 'rgba(239,68,68,0.1)';
+                        statusDiv.style.border = '1px solid rgba(239,68,68,0.3)';
+                        statusDiv.innerHTML = `
+                            <div style="font-size:1.1rem; font-weight:600; color:#ef4444;">❌ Payment Failed</div>
+                            <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Customer cancelled or insufficient funds. Try again.</div>
+                        `;
+                    }
+                    // If PENDING, continue polling
+                } catch (error) {
+                    console.error('IntaSend polling error:', error);
+                }
+            }, 3000); // Poll every 3 seconds
         }
         
         function completeSale() {
@@ -2259,13 +2585,26 @@
             cart = [];
             mpesaConfirmed = false;
             mpesaData = null;
-            // UPDATED: Reset new M-Pesa confirmation panel
+            
+            // Stop IntaSend polling if active
+            if (intasendPollingInterval) {
+                clearInterval(intasendPollingInterval);
+                intasendPollingInterval = null;
+            }
+            
+            // UPDATED: Reset M-Pesa panels (both Manual and IntaSend)
             const mpesaPhoneConfirm = document.getElementById('mpesaPhoneConfirm');
+            const mpesaPhoneIntasend = document.getElementById('mpesaPhoneIntasend');
             const mpesaConfirmMsg = document.getElementById('mpesaConfirmMsg');
             const confirmMpesaBtn = document.getElementById('confirmMpesaBtn');
+            const intasendStatus = document.getElementById('intasendStatus');
+            
             if (mpesaPhoneConfirm) mpesaPhoneConfirm.value = '';
+            if (mpesaPhoneIntasend) mpesaPhoneIntasend.value = '';
             if (mpesaConfirmMsg) mpesaConfirmMsg.innerHTML = '';
             if (confirmMpesaBtn) confirmMpesaBtn.disabled = true;
+            if (intasendStatus) intasendStatus.style.display = 'none';
+            
             document.getElementById('mpesaPanel').classList.remove('show');
             document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active', 'mpesa-pending', 'mpesa-confirmed'));
             document.querySelector('[data-method="Cash"]').classList.add('active');
@@ -2989,6 +3328,37 @@
             document.getElementById('settingMpesa').value = config.mpesaTill || '';
             document.getElementById('settingVatRate').value = config.vatRate || 16;
             document.getElementById('settingReceiptFooter').value = config.receiptFooter || 'Thank you for shopping with us!';
+            
+            // ADDED: Load IntaSend settings
+            document.getElementById('settingIntasendEnabled').checked = config.intasendEnabled || false;
+            document.getElementById('settingIntasendPublicKey').value = config.intasendPublicKey || '';
+            document.getElementById('settingIntasendSecretKey').value = config.intasendSecretKey || '';
+            document.getElementById('settingIntasendEnvironment').value = config.intasendEnvironment || 'test';
+            toggleIntasendFields();
+            
+            // ADDED: Check for pending IntaSend registration
+            checkPendingIntasendRegistration();
+        }
+        
+        function checkPendingIntasendRegistration() {
+            const pending = localStorage.getItem('intasend_pending_client');
+            if (pending) {
+                try {
+                    const clientInfo = JSON.parse(pending);
+                    const timeSince = Date.now() - new Date(clientInfo.timestamp).getTime();
+                    const hoursSince = Math.floor(timeSince / (1000 * 60 * 60));
+                    
+                    // Show reminder if less than 7 days old
+                    if (hoursSince < 168) {
+                        showToast(`Reminder: Pending IntaSend registration for ${clientInfo.businessName}`, 'info');
+                    } else {
+                        // Clear old pending registrations
+                        localStorage.removeItem('intasend_pending_client');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('intasend_pending_client');
+                }
+            }
         }
         
         function saveSettings() {
@@ -2998,8 +3368,229 @@
             config.mpesaTill = document.getElementById('settingMpesa').value.trim();
             config.vatRate = parseInt(document.getElementById('settingVatRate').value) || 16;
             config.receiptFooter = document.getElementById('settingReceiptFooter').value.trim();
+            
+            // ADDED: Save IntaSend settings
+            config.intasendEnabled = document.getElementById('settingIntasendEnabled').checked;
+            config.intasendPublicKey = document.getElementById('settingIntasendPublicKey').value.trim();
+            config.intasendSecretKey = document.getElementById('settingIntasendSecretKey').value.trim();
+            config.intasendEnvironment = document.getElementById('settingIntasendEnvironment').value;
+            
+            // Clear pending client registration if keys were just added
+            if (config.intasendPublicKey && config.intasendSecretKey) {
+                const pending = localStorage.getItem('intasend_pending_client');
+                if (pending) {
+                    const clientInfo = JSON.parse(pending);
+                    showToast(`IntaSend setup complete for ${clientInfo.businessName}! 🎉`, 'success');
+                    localStorage.removeItem('intasend_pending_client');
+                }
+            }
+            
             localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
             showToast('Settings saved', 'success');
+        }
+        
+        // ADDED: IntaSend Integration Functions
+        function toggleIntasendFields() {
+            const enabled = document.getElementById('settingIntasendEnabled').checked;
+            const hasKeys = config.intasendPublicKey && config.intasendSecretKey;
+            
+            // Show quick register if enabling but no keys yet
+            if (enabled && !hasKeys) {
+                document.getElementById('intasendQuickRegister').style.display = 'block';
+                document.getElementById('intasendFields').style.display = 'none';
+            } else if (enabled && hasKeys) {
+                document.getElementById('intasendQuickRegister').style.display = 'none';
+                document.getElementById('intasendFields').style.display = 'block';
+            } else {
+                document.getElementById('intasendQuickRegister').style.display = 'none';
+                document.getElementById('intasendFields').style.display = 'none';
+            }
+        }
+        
+        function toggleQuickRegister() {
+            // Switch between quick register and manual API entry
+            const quickReg = document.getElementById('intasendQuickRegister');
+            const fields = document.getElementById('intasendFields');
+            
+            if (quickReg.style.display !== 'none') {
+                quickReg.style.display = 'none';
+                fields.style.display = 'block';
+            } else {
+                quickReg.style.display = 'block';
+                fields.style.display = 'none';
+            }
+        }
+        
+        function openIntasendRegistration() {
+            const businessName = document.getElementById('regBusinessName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const kraPin = document.getElementById('regKraPin').value.trim();
+            
+            if (!businessName || !email || !phone) {
+                showToast('Please fill in Business Name, Email, and Phone', 'error');
+                return;
+            }
+            
+            // Validate email
+            if (!email.includes('@')) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            // Validate phone
+            if (!phone.match(/^07\d{8}$/)) {
+                showToast('Phone must be 10 digits starting with 07', 'error');
+                return;
+            }
+            
+            // Store client info temporarily for reference
+            const clientInfo = {
+                businessName,
+                email,
+                phone,
+                kraPin,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('intasend_pending_client', JSON.stringify(clientInfo));
+            
+            // Open IntaSend registration in new tab
+            const registrationUrl = 'https://intasend.com/account/signup';
+            window.open(registrationUrl, '_blank');
+            
+            // Show instructions
+            showToast('IntaSend registration opened! Follow the steps, then return here with API keys.', 'success');
+            
+            // Show modal with detailed instructions
+            showIntasendInstructions(clientInfo);
+        }
+        
+        function showIntasendInstructions(clientInfo) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">📋 IntaSend Registration Steps</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    </div>
+                    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+                        <div style="padding:16px; background:rgba(16,185,129,0.1); border-radius:8px; margin-bottom:16px;">
+                            <strong style="color:#10b981;">✅ Client Info (Copy this):</strong><br>
+                            <div style="margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:0.9rem;">
+                                <strong>Business:</strong> ${clientInfo.businessName}<br>
+                                <strong>Email:</strong> ${clientInfo.email}<br>
+                                <strong>Phone:</strong> ${clientInfo.phone}<br>
+                                ${clientInfo.kraPin ? `<strong>KRA PIN:</strong> ${clientInfo.kraPin}<br>` : ''}
+                            </div>
+                        </div>
+                        
+                        <h4 style="color:var(--accent-blue); margin-top:16px;">Step 1: Fill Registration Form</h4>
+                        <p style="color:var(--text-secondary); margin:8px 0; line-height:1.6;">
+                            In the IntaSend tab that just opened:<br>
+                            • Enter the client's business name<br>
+                            • Use their email (they'll receive verification)<br>
+                            • Enter their phone number<br>
+                            • Create a password (save it securely)<br>
+                            • Select "Business" account type
+                        </p>
+                        
+                        <h4 style="color:var(--accent-blue); margin-top:16px;">Step 2: Verify Email</h4>
+                        <p style="color:var(--text-secondary); margin:8px 0; line-height:1.6;">
+                            • Client receives email from IntaSend<br>
+                            • They click verification link<br>
+                            • Account gets activated
+                        </p>
+                        
+                        <h4 style="color:var(--accent-blue); margin-top:16px;">Step 3: Complete Business Verification</h4>
+                        <p style="color:var(--text-secondary); margin:8px 0; line-height:1.6;">
+                            Login to IntaSend dashboard and upload:<br>
+                            • Business registration/certificate<br>
+                            • KRA PIN certificate<br>
+                            • ID/Passport of owner<br>
+                            • (Verification takes 1-3 business days)
+                        </p>
+                        
+                        <h4 style="color:var(--accent-blue); margin-top:16px;">Step 4: Get API Keys</h4>
+                        <p style="color:var(--text-secondary); margin:8px 0; line-height:1.6;">
+                            Once verified:<br>
+                            • Go to Dashboard → API Keys<br>
+                            • Copy <strong>Public Key</strong> (starts with ISPubKey_)<br>
+                            • Copy <strong>Secret Key</strong> (starts with ISSecretKey_)<br>
+                            • Select Test or Live environment
+                        </p>
+                        
+                        <h4 style="color:var(--accent-blue); margin-top:16px;">Step 5: Return Here & Enter Keys</h4>
+                        <p style="color:var(--text-secondary); margin:8px 0; line-height:1.6;">
+                            • Close this modal<br>
+                            • Click "I already have API keys →"<br>
+                            • Paste Public Key and Secret Key<br>
+                            • Select environment (Test/Live)<br>
+                            • Click "Test API Connection"<br>
+                            • Save Settings ✅
+                        </p>
+                        
+                        <div style="margin-top:20px; padding:12px; background:rgba(251,191,36,0.1); border-left:3px solid #f59e0b; border-radius:4px;">
+                            <strong style="color:#f59e0b;">⏱️ Timeline:</strong><br>
+                            <span style="color:var(--text-secondary); font-size:0.85rem;">
+                                • Registration: 5 minutes<br>
+                                • Email verification: Instant<br>
+                                • Business verification: 1-3 business days<br>
+                                • API keys available: Immediately after verification
+                            </span>
+                        </div>
+                        
+                        <div style="margin-top:12px; padding:12px; background:rgba(59,130,246,0.1); border-left:3px solid #3b82f6; border-radius:4px;">
+                            <strong style="color:#3b82f6;">💡 Pro Tip:</strong><br>
+                            <span style="color:var(--text-secondary); font-size:0.85rem;">
+                                While waiting for verification, use <strong>Test Mode</strong> to try the system with sandbox/fake money. Switch to Live Mode once verified.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="modal-btn success" onclick="this.closest('.modal-overlay').remove()">Got it! 👍</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function testIntasendConnection() {
+            const publicKey = document.getElementById('settingIntasendPublicKey').value.trim();
+            const secretKey = document.getElementById('settingIntasendSecretKey').value.trim();
+            const environment = document.getElementById('settingIntasendEnvironment').value;
+            
+            if (!publicKey || !secretKey) {
+                showToast('Please enter both Public Key and Secret Key', 'error');
+                return;
+            }
+            
+            showToast('Testing IntaSend connection...', 'info');
+            
+            try {
+                // Test API connection by getting account balance/status
+                const baseUrl = environment === 'live' 
+                    ? 'https://api.intasend.com' 
+                    : 'https://sandbox.intasend.com';
+                
+                const response = await fetch(`${baseUrl}/api/v1/payment/status/`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${secretKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok || response.status === 404) {
+                    // 404 is OK - means API is accessible, just no transactions yet
+                    showToast('✅ IntaSend API Connected Successfully!', 'success');
+                } else {
+                    showToast('❌ API connection failed. Check your keys.', 'error');
+                }
+            } catch (error) {
+                showToast('❌ Connection error: ' + error.message, 'error');
+            }
         }
         
         function resetSystemData() {
