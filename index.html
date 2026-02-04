@@ -1646,7 +1646,8 @@
             </div>
         </div>
     </div>
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script>
         // ==================== DUKAPOS PRO v2.0 ====================
         // MULTI-USER SUPPORT:
         // - Multiple users can be created with unique usernames/emails
@@ -1785,76 +1786,16 @@
             document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
             if (screen === 'login') {
                 document.getElementById('loginForm').classList.add('active');
-            } else if (screen === 'signup') {
-                document.getElementById('signupForm').classList.add('active');
             } else if (screen === 'forgotPassword') {
                 document.getElementById('forgotPasswordForm').classList.add('active');
             }
+            // REMOVED: signup screen (admin creates users now)
         }
         
+        // REMOVED: Public signup disabled - admin creates users now
         function handleSignup() {
-            const name = document.getElementById('signupName').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const username = document.getElementById('signupUsername').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-            const role = document.getElementById('signupRole').value;
-            
-            // Validation
-            if (!name || !email || !username || !password || !confirmPassword) {
-                showToast('Please fill all required fields', 'error');
-                return;
-            }
-            if (!email.includes('@') || !email.includes('.')) {
-                showToast('Please enter a valid email address', 'error');
-                return;
-            }
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters', 'error');
-                return;
-            }
-            if (users.some(u => u.username === username)) {
-                showToast('Username already exists', 'error');
-                return;
-            }
-            if (users.some(u => u.email === email)) {
-                showToast('Email already registered', 'error');
-                return;
-            }
-            
-            // Create new user
-            const newUser = {
-                id: Date.now(),
-                name,
-                email,
-                username,
-                password,
-                role,
-                status: 'active',
-                lastLogin: new Date().toISOString()
-            };
-            
-            users.push(newUser);
-            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-            
-            // Auto-login the new user
-            currentUser = newUser;
-            sessionStorage.setItem('currentUser', JSON.stringify(newUser));
-            
-            showToast('Account created successfully!', 'success', 'Welcome');
-            
-            // Clear form
-            document.getElementById('signupName').value = '';
-            document.getElementById('signupEmail').value = '';
-            document.getElementById('signupUsername').value = '';
-            document.getElementById('signupPassword').value = '';
-            document.getElementById('signupConfirmPassword').value = '';
-            
-            showApp();
+            showToast('Public signup disabled. Contact administrator for account creation.', 'error');
+            return;
         }
         
         function handleForgotPassword() {
@@ -3719,5 +3660,27 @@
         }
         
         function showPr    </script>
+</body>
+</html>
+ofile() {
+            console.log('Show profile');
+        }
+        
+        // Initialize app
+        function initApp() {
+            loadAllData();
+            if (!currentUser) {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            } else {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                renderAll();
+            }
+        }
+        
+        // Run on page load
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
 </body>
 </html>
