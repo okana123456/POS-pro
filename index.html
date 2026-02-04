@@ -44,6 +44,13 @@
         .demo-credentials{margin-top:16px;padding:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:var(--radius-sm);font-size:.75rem;text-align:left}
         .demo-credentials-title{font-weight:600;color:var(--accent-blue);margin-bottom:6px}
         .demo-credentials-item{color:var(--text-secondary);margin:4px 0;font-family:'JetBrains Mono',monospace}
+        .login-footer{margin-top:20px;text-align:center;font-size:.85rem}
+        .login-link{color:var(--accent-blue);cursor:pointer;text-decoration:none;transition:all .2s}
+        .login-link:hover{color:var(--accent-cyan);text-decoration:underline}
+        .auth-screen{display:none}
+        .auth-screen.active{display:block}
+        .back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);cursor:pointer;font-size:.85rem;margin-bottom:16px;transition:color .2s}
+        .back-btn:hover{color:var(--text-primary)}
         
         /* Main App Container */
         .app-container{display:flex;min-height:100vh}
@@ -477,37 +484,101 @@
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
-            <div class="login-logo">🏪</div>
-            <h1 class="login-title">DukaPOS Pro</h1>
-            <p class="login-subtitle">Complete Business Management System</p>
-            <div class="login-form">
-                <div class="login-input-group">
-                    <label class="login-label">Username or PIN</label>
-                    <input type="text" class="login-input" id="loginUsername" placeholder="Enter username or PIN">
+            <!-- Login Form -->
+            <div class="auth-screen active" id="loginForm">
+                <div class="login-logo">🏪</div>
+                <h1 class="login-title">DukaPOS Pro</h1>
+                <p class="login-subtitle">Complete Business Management System</p>
+                <div class="login-form">
+                    <div class="login-input-group">
+                        <label class="login-label">Username</label>
+                        <input type="text" class="login-input" id="loginUsername" placeholder="Enter username" onkeypress="if(event.key==='Enter')handleLogin()">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Password</label>
+                        <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" onkeypress="if(event.key==='Enter')handleLogin()">
+                    </div>
+                    <button class="login-btn" onclick="handleLogin()">🔐 Sign In</button>
                 </div>
-                <div class="login-input-group">
-                    <label class="login-label">Password</label>
-                    <input type="password" class="login-input" id="loginPassword" placeholder="Enter password">
+                <div class="login-footer">
+                    <span class="login-link" onclick="showAuthScreen('forgotPassword')">Forgot Password?</span>
+                    <span style="color:var(--text-muted);margin:0 8px">|</span>
+                    <span class="login-link" onclick="showAuthScreen('signup')">Create Account</span>
                 </div>
-                <button class="login-btn" onclick="handleLogin()">🔐 Sign In</button>
+                <div class="login-divider"><span>Quick Demo Access</span></div>
+                <div class="demo-accounts">
+                    <div class="demo-btn admin" onclick="demoLogin('admin')">
+                        <div class="demo-btn-icon">👑</div>
+                        <div class="demo-btn-role">Admin</div>
+                        <div class="demo-btn-desc">Full Access</div>
+                    </div>
+                    <div class="demo-btn seller" onclick="demoLogin('seller')">
+                        <div class="demo-btn-icon">🛒</div>
+                        <div class="demo-btn-role">Seller</div>
+                        <div class="demo-btn-desc">POS Only</div>
+                    </div>
+                </div>
+                <div class="demo-credentials">
+                    <div class="demo-credentials-title">🔑 Demo Login Credentials</div>
+                    <div class="demo-credentials-item">👑 Admin: admin / admin123</div>
+                    <div class="demo-credentials-item">🛒 Seller: seller / seller123</div>
+                </div>
             </div>
-            <div class="login-divider"><span>Quick Demo Access</span></div>
-            <div class="demo-accounts">
-                <div class="demo-btn admin" onclick="demoLogin('admin')">
-                    <div class="demo-btn-icon">👑</div>
-                    <div class="demo-btn-role">Admin</div>
-                    <div class="demo-btn-desc">Full Access</div>
-                </div>
-                <div class="demo-btn seller" onclick="demoLogin('seller')">
-                    <div class="demo-btn-icon">🛒</div>
-                    <div class="demo-btn-role">Seller</div>
-                    <div class="demo-btn-desc">POS Only</div>
+
+            <!-- Signup Form -->
+            <div class="auth-screen" id="signupForm">
+                <div class="back-btn" onclick="showAuthScreen('login')">← Back to Login</div>
+                <div class="login-logo">📝</div>
+                <h1 class="login-title">Create Account</h1>
+                <p class="login-subtitle">Join DukaPOS Pro today</p>
+                <div class="login-form">
+                    <div class="login-input-group">
+                        <label class="login-label">Full Name *</label>
+                        <input type="text" class="login-input" id="signupName" placeholder="Enter your full name">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Email Address *</label>
+                        <input type="email" class="login-input" id="signupEmail" placeholder="your.email@example.com">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Username *</label>
+                        <input type="text" class="login-input" id="signupUsername" placeholder="Choose a username">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Password *</label>
+                        <input type="password" class="login-input" id="signupPassword" placeholder="Create a strong password">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Confirm Password *</label>
+                        <input type="password" class="login-input" id="signupConfirmPassword" placeholder="Confirm your password">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Role</label>
+                        <select class="login-select" id="signupRole">
+                            <option value="admin">Administrator (Full Access)</option>
+                            <option value="seller" selected>Seller (POS Only)</option>
+                        </select>
+                    </div>
+                    <button class="login-btn" onclick="handleSignup()">✨ Create Account</button>
                 </div>
             </div>
-            <div class="demo-credentials">
-                <div class="demo-credentials-title">🔑 Demo Login Credentials</div>
-                <div class="demo-credentials-item">👑 Admin: admin / admin123</div>
-                <div class="demo-credentials-item">🛒 Seller: seller / seller123</div>
+
+            <!-- Forgot Password Form -->
+            <div class="auth-screen" id="forgotPasswordForm">
+                <div class="back-btn" onclick="showAuthScreen('login')">← Back to Login</div>
+                <div class="login-logo">🔑</div>
+                <h1 class="login-title">Forgot Password</h1>
+                <p class="login-subtitle">Enter your email to reset password</p>
+                <div class="login-form">
+                    <div class="login-input-group">
+                        <label class="login-label">Email Address *</label>
+                        <input type="email" class="login-input" id="forgotEmail" placeholder="your.email@example.com">
+                    </div>
+                    <button class="login-btn" onclick="handleForgotPassword()">📧 Send Reset Link</button>
+                    <div style="margin-top:16px;padding:12px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary)">
+                        ℹ️ For demo purposes, password reset will be simulated. In production, this would send an email with a reset link.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -625,6 +696,7 @@
                     <button class="top-btn" onclick="showNotifications()" title="Notifications">
                         🔔<span class="notification-dot" id="notifDot"></span>
                     </button>
+                    <button class="top-btn" onclick="logout()" title="Logout" style="color:var(--accent-red)">🚪</button>
                 </div>
             </div>
             
@@ -1240,6 +1312,14 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="card" style="border-color:var(--accent-red)">
+                            <div class="card-header" style="background:rgba(239,68,68,.1)"><h3 class="card-title" style="color:var(--accent-red)">⚠️ Danger Zone</h3></div>
+                            <div class="card-body">
+                                <p style="color:var(--text-secondary);margin-bottom:16px;font-size:.9rem">These actions are irreversible. Use with caution.</p>
+                                <button class="inv-btn danger" onclick="resetSystemData()" style="width:100%">🔄 Reset All System Data</button>
+                                <p style="color:var(--text-muted);margin-top:8px;font-size:.75rem">This will clear all sales, inventory, expenses, and reset to demo data. Users will be preserved.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1365,11 +1445,24 @@
             <div class="modal-header"><h3 class="modal-title">👤 Add New User</h3><button class="modal-close" onclick="closeModal('addUserModal')">×</button></div>
             <div class="modal-body">
                 <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="newUserName" placeholder="John Doe"></div>
+                <div class="form-group"><label class="form-label">Email Address *</label><input type="email" class="form-input" id="newUserEmail" placeholder="user@example.com"></div>
                 <div class="form-group"><label class="form-label">Username *</label><input type="text" class="form-input" id="newUserUsername" placeholder="johnd"></div>
                 <div class="form-group"><label class="form-label">PIN/Password *</label><input type="password" class="form-input" id="newUserPassword" placeholder="••••••"></div>
                 <div class="form-group"><label class="form-label">Role *</label><select class="form-select" id="newUserRole"><option value="seller">Seller (POS Only)</option><option value="admin">Administrator (Full Access)</option></select></div>
             </div>
             <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('addUserModal')">Cancel</button><button class="modal-btn success" onclick="addNewUser()">Add User</button></div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="resetPasswordModal" onclick="if(event.target===this)closeModal('resetPasswordModal')">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">🔑 Reset User Password</h3><button class="modal-close" onclick="closeModal('resetPasswordModal')">×</button></div>
+            <div class="modal-body">
+                <div class="quick-add-product"><div class="quick-add-name" id="resetUserName">User Name</div><div class="quick-add-price" id="resetUserEmail">user@example.com</div></div>
+                <div class="form-group"><label class="form-label">New Password *</label><input type="password" class="form-input" id="resetNewPassword" placeholder="Enter new password"></div>
+                <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" class="form-input" id="resetConfirmPassword" placeholder="Confirm new password"></div>
+            </div>
+            <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('resetPasswordModal')">Cancel</button><button class="modal-btn success" onclick="confirmPasswordReset()">Reset Password</button></div>
         </div>
     </div>
     
@@ -1394,12 +1487,21 @@
         </div>
     </div>
     <script>
+        // ==================== DUKAPOS PRO v2.0 ====================
+        // MULTI-USER SUPPORT:
+        // - Multiple users can be created with unique usernames/emails
+        // - Data stored in browser's localStorage (per device/browser)
+        // - Each user session tracked via sessionStorage
+        // - Admin can manage all users and reset passwords
+        // - System designed for local/small business use
+        // - For multi-device sync, consider backend integration
+        
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         let config = { businessName: 'DukaPOS Business', kraPin: '', phone: '', mpesaTill: '', vatRate: 16 };
         let users = [
-            { id: 1, name: 'Admin User', username: 'admin', password: 'admin123', role: 'admin', status: 'active', lastLogin: null },
-            { id: 2, name: 'Sales Staff', username: 'seller', password: '1234', role: 'seller', status: 'active', lastLogin: null }
+            { id: 1, name: 'Admin User', email: 'admin@dukapos.com', username: 'admin', password: 'admin123', role: 'admin', status: 'active', lastLogin: null },
+            { id: 2, name: 'Sales Staff', email: 'seller@dukapos.com', username: 'seller', password: 'seller123', role: 'seller', status: 'active', lastLogin: null }
         ];
         let products = [], sales = [], creditSales = [], expenses = [], categories = [], suppliers = [], journalEntries = [];
         let cart = [], selectedPayment = 'Cash', selectedCategory = 'All', quickAddProduct = null, quickAddQty = 1;
@@ -1430,6 +1532,23 @@
         function loadAllData() {
             config = JSON.parse(localStorage.getItem(STORAGE_KEYS.config)) || config;
             users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users)) || users;
+            
+            // Migration: Add email to old users if missing
+            let needsUpdate = false;
+            users = users.map(user => {
+                if (!user.email) {
+                    needsUpdate = true;
+                    // Generate default email based on username
+                    return { ...user, email: `${user.username}@dukapos.com` };
+                }
+                return user;
+            });
+            
+            // Save updated users if migration occurred
+            if (needsUpdate) {
+                localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+            }
+            
             products = JSON.parse(localStorage.getItem(STORAGE_KEYS.products)) || [];
             sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.sales)) || [];
             creditSales = JSON.parse(localStorage.getItem(STORAGE_KEYS.credit)) || [];
@@ -1458,40 +1577,175 @@
         
         // ==================== AUTHENTICATION ====================
         function handleLogin() {
+            console.log('Login button clicked'); // Debug log
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
-            if (!username || !password) { showToast('Please enter username and password', 'error'); return; }
-            const user = users.find(u => (u.username === username || u.password === username) && u.password === password);
+            
+            console.log('Login attempt with username:', username); // Debug log
+            
+            if (!username || !password) { 
+                showToast('Please enter username and password', 'error'); 
+                return; 
+            }
+            
+            console.log('Available users:', users.length); // Debug log
+            
+            const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
+            
             if (user) {
-                if (user.status !== 'active') { showToast('Account is inactive', 'error'); return; }
+                console.log('User found:', user.name); // Debug log
+                if (user.status !== 'active') { 
+                    showToast('Account is inactive', 'error'); 
+                    return; 
+                }
                 user.lastLogin = new Date().toISOString();
                 currentUser = user;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
                 saveAllData();
                 showApp();
+                showToast(`Welcome back, ${user.name}!`, 'success');
             } else {
-                showToast('Invalid credentials', 'error');
+                console.log('User not found. Trying credentials:', username, password); // Debug log
+                showToast('Invalid credentials. Try: admin/admin123 or seller/seller123', 'error');
+            }
+        }
+        
+        function showAuthScreen(screen) {
+            document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+            if (screen === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+            } else if (screen === 'signup') {
+                document.getElementById('signupForm').classList.add('active');
+            } else if (screen === 'forgotPassword') {
+                document.getElementById('forgotPasswordForm').classList.add('active');
+            }
+        }
+        
+        function handleSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const role = document.getElementById('signupRole').value;
+            
+            // Validation
+            if (!name || !email || !username || !password || !confirmPassword) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+            if (!email.includes('@') || !email.includes('.')) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            if (users.some(u => u.username === username)) {
+                showToast('Username already exists', 'error');
+                return;
+            }
+            if (users.some(u => u.email === email)) {
+                showToast('Email already registered', 'error');
+                return;
+            }
+            
+            // Create new user
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                username,
+                password,
+                role,
+                status: 'active',
+                lastLogin: new Date().toISOString()
+            };
+            
+            users.push(newUser);
+            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+            
+            // Auto-login the new user
+            currentUser = newUser;
+            sessionStorage.setItem('currentUser', JSON.stringify(newUser));
+            
+            showToast('Account created successfully!', 'success', 'Welcome');
+            
+            // Clear form
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupEmail').value = '';
+            document.getElementById('signupUsername').value = '';
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('signupConfirmPassword').value = '';
+            
+            showApp();
+        }
+        
+        function handleForgotPassword() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            
+            if (!email) {
+                showToast('Please enter your email address', 'error');
+                return;
+            }
+            
+            const user = users.find(u => u.email === email);
+            
+            if (user) {
+                // Simulate sending reset email
+                showToast('Password reset link sent!', 'success', 'Check Your Email');
+                
+                // For demo: show the password in console
+                console.log(`Password for ${email}: ${user.password}`);
+                
+                // In production, this would send an actual email
+                setTimeout(() => {
+                    showToast(`Demo: Your password is "${user.password}"`, 'info', 'Password Retrieved');
+                }, 2000);
+                
+                // Go back to login after 3 seconds
+                setTimeout(() => {
+                    showAuthScreen('login');
+                    document.getElementById('forgotEmail').value = '';
+                }, 3000);
+            } else {
+                showToast('No account found with this email', 'error');
             }
         }
         
         function demoLogin(role) {
+            console.log('Demo login clicked for role:', role); // Debug log
             if (products.length === 0) loadDemoData();
             const user = users.find(u => u.role === role);
             if (user) {
                 user.lastLogin = new Date().toISOString();
                 currentUser = user;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
+                showToast(`Demo login as ${user.name}`, 'success');
                 showApp();
+            } else {
+                console.error('Demo user not found for role:', role);
+                showToast('Demo user not found', 'error');
             }
         }
         
         function logout() {
-            currentUser = null;
-            sessionStorage.removeItem('currentUser');
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('appContainer').classList.add('hidden');
-            document.getElementById('loginUsername').value = '';
-            document.getElementById('loginPassword').value = '';
+            if (currentUser) {
+                const userName = currentUser.name;
+                currentUser = null;
+                sessionStorage.removeItem('currentUser');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                showToast(`${userName} logged out successfully`, 'success');
+                console.log('User logged out successfully');
+            }
         }
         
         function showApp() {
@@ -2542,13 +2796,13 @@
         function renderUsers() {
             document.getElementById('usersTableBody').innerHTML = users.map(u => `
                 <tr>
-                    <td><strong>${u.name}</strong></td>
+                    <td><strong>${u.name}</strong><br><small style="color:var(--text-muted)">${u.email || 'No email'}</small></td>
                     <td>${u.username}</td>
                     <td><span class="table-status ${u.role === 'admin' ? 'info' : 'success'}">${u.role === 'admin' ? '👑 Admin' : '🛒 Seller'}</span></td>
                     <td><span class="table-status ${u.status === 'active' ? 'success' : 'danger'}">${u.status}</span></td>
                     <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE') : 'Never'}</td>
                     <td>
-                        <button class="action-btn primary" onclick="editUser('${u.id}')">Edit</button>
+                        <button class="action-btn primary" onclick="openResetPasswordModal(${u.id})">🔑 Reset</button>
                         ${u.id !== currentUser.id ? `<button class="action-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus(${u.id})">${u.status === 'active' ? 'Disable' : 'Enable'}</button>` : ''}
                     </td>
                 </tr>
@@ -2559,21 +2813,56 @@
         
         function addNewUser() {
             const name = document.getElementById('newUserName').value.trim();
+            const email = document.getElementById('newUserEmail').value.trim();
             const username = document.getElementById('newUserUsername').value.trim();
             const password = document.getElementById('newUserPassword').value;
             const role = document.getElementById('newUserRole').value;
             
-            if (!name || !username || !password) { showToast('Fill all required fields', 'error'); return; }
+            if (!name || !email || !username || !password) { showToast('Fill all required fields', 'error'); return; }
             if (users.some(u => u.username === username)) { showToast('Username already exists', 'error'); return; }
+            if (users.some(u => u.email === email)) { showToast('Email already exists', 'error'); return; }
+            if (!email.includes('@')) { showToast('Invalid email address', 'error'); return; }
             
-            users.push({ id: Date.now(), name, username, password, role, status: 'active', lastLogin: null });
+            users.push({ id: Date.now(), name, email, username, password, role, status: 'active', lastLogin: null });
             localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
             closeModal('addUserModal');
             document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
             document.getElementById('newUserUsername').value = '';
             document.getElementById('newUserPassword').value = '';
             showToast('User added successfully', 'success');
             renderUsers();
+        }
+        
+        let resetUserId = null;
+        function openResetPasswordModal(userId) {
+            resetUserId = userId;
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('resetUserName').textContent = user.name;
+                document.getElementById('resetUserEmail').textContent = user.email || user.username;
+                document.getElementById('resetNewPassword').value = '';
+                document.getElementById('resetConfirmPassword').value = '';
+                openModal('resetPasswordModal');
+            }
+        }
+        
+        function confirmPasswordReset() {
+            const newPassword = document.getElementById('resetNewPassword').value;
+            const confirmPassword = document.getElementById('resetConfirmPassword').value;
+            
+            if (!newPassword || !confirmPassword) { showToast('Fill all password fields', 'error'); return; }
+            if (newPassword !== confirmPassword) { showToast('Passwords do not match', 'error'); return; }
+            if (newPassword.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+            
+            const user = users.find(u => u.id === resetUserId);
+            if (user) {
+                user.password = newPassword;
+                localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                closeModal('resetPasswordModal');
+                showToast(`Password reset for ${user.name}`, 'success');
+                renderUsers();
+            }
         }
         
         function toggleUserStatus(id) {
@@ -2604,6 +2893,42 @@
             config.receiptFooter = document.getElementById('settingReceiptFooter').value.trim();
             localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
             showToast('Settings saved', 'success');
+        }
+        
+        function resetSystemData() {
+            if (!confirm('⚠️ WARNING: This will DELETE all sales, inventory, expenses, and credit data!\n\nUsers will be preserved but all business data will be reset to demo state.\n\nAre you absolutely sure?')) {
+                return;
+            }
+            
+            if (!confirm('This action CANNOT be undone! Click OK to proceed with data reset.')) {
+                return;
+            }
+            
+            // Clear all business data but preserve users
+            localStorage.removeItem(STORAGE_KEYS.products);
+            localStorage.removeItem(STORAGE_KEYS.sales);
+            localStorage.removeItem(STORAGE_KEYS.credit);
+            localStorage.removeItem(STORAGE_KEYS.expenses);
+            localStorage.removeItem(STORAGE_KEYS.categories);
+            localStorage.removeItem(STORAGE_KEYS.suppliers);
+            localStorage.removeItem(STORAGE_KEYS.journal);
+            
+            // Reset arrays
+            products = [];
+            sales = [];
+            creditSales = [];
+            expenses = [];
+            categories = [];
+            suppliers = [];
+            journalEntries = [];
+            
+            // Load demo data
+            loadDemoData();
+            
+            showToast('System data reset successfully', 'success', 'Reset Complete');
+            
+            // Refresh current view
+            renderAll();
         }
         
         // ==================== EXPORT ====================
