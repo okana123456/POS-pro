@@ -352,7 +352,7 @@
         .modal-title{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px}
         .modal-close{width:36px;height:36px;background:var(--bg-dark);border:none;border-radius:50%;color:var(--text-secondary);cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
         .modal-close:hover{color:var(--text-primary);background:var(--bg-card-hover)}
-        .modal-body{padding:24px;overflow-y:auto;max-height:65vh}
+        .modal-body{padding:24px;overflow-y:auto;max-height:calc(80vh - 160px)}
         .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;background:var(--bg-dark)}
         .modal-btn{flex:1;padding:14px;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;transition:all .2s;font-size:.95rem;border:none}
         .modal-btn.cancel{background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary)}
@@ -360,6 +360,95 @@
         .modal-btn.success{background:var(--gradient-green);color:white}
         .modal-btn.danger{background:var(--gradient-red);color:white}
         .modal-btn:hover{transform:translateY(-1px)}
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            /* Reduce all font sizes for mobile */
+            body{font-size:13px}
+            .login-title{font-size:1.4rem}
+            .login-subtitle{font-size:.8rem}
+            .login-input{padding:12px 14px;font-size:.9rem}
+            .login-btn{padding:14px;font-size:.9rem}
+            .demo-btn{padding:10px}
+            .demo-btn-icon{font-size:1.3rem}
+            .demo-btn-role{font-size:.75rem}
+            .demo-btn-desc{font-size:.65rem}
+            .demo-credentials{font-size:.7rem}
+            
+            /* Sidebar */
+            .sidebar{width:100%;transform:translateX(-100%);position:fixed;z-index:1000}
+            .sidebar.show{transform:translateX(0)}
+            .main-content{margin-left:0}
+            .mobile-menu-btn{display:flex}
+            
+            /* Top bar */
+            .top-bar{padding:0 12px;height:56px}
+            .page-title{font-size:1rem}
+            .search-box{display:none}
+            
+            /* Stats grid */
+            .stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+            .stat-card{padding:14px}
+            .stat-label{font-size:.7rem}
+            .stat-value{font-size:1.3rem}
+            .stat-icon{font-size:1.5rem}
+            .stat-change{font-size:.65rem}
+            
+            /* Content sections */
+            .section-header{flex-direction:column;align-items:flex-start;gap:12px}
+            .section-actions{width:100%}
+            .btn{padding:10px 14px;font-size:.8rem}
+            
+            /* POS Layout */
+            .pos-layout{grid-template-columns:1fr;gap:16px;height:auto}
+            .pos-cart{position:fixed;bottom:0;left:0;right:0;height:60vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;z-index:100;transform:translateY(calc(100% - 60px));transition:transform .3s}
+            .pos-cart.expanded{transform:translateY(0)}
+            .cart-header{cursor:pointer}
+            .pos-product-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:calc(100vh - 200px)}
+            .product-card{padding:12px}
+            .product-emoji{font-size:2rem}
+            .product-name{font-size:.75rem}
+            .product-price{font-size:.9rem}
+            
+            /* Tables */
+            .data-table{font-size:.75rem}
+            .data-table th,.data-table td{padding:10px 8px;font-size:.75rem}
+            
+            /* Modal */
+            .modal{width:95%;max-width:95%;margin:20px}
+            .modal-body{max-height:calc(70vh - 140px);padding:16px}
+            .modal-header{padding:14px 16px}
+            .modal-footer{padding:12px 16px;flex-direction:column}
+            .modal-btn{width:100%}
+            
+            /* Form elements */
+            .form-input,.form-select,.form-textarea{font-size:.85rem;padding:10px 12px}
+            .form-row{grid-template-columns:1fr}
+            
+            /* Charts */
+            .chart-container{height:250px}
+            
+            /* Content wrapper padding */
+            .content-wrapper{padding:16px 12px}
+            
+            /* Toast notifications */
+            .toast{min-width:280px;font-size:.85rem}
+            .toast-title{font-size:.85rem}
+            .toast-message{font-size:.75rem}
+            
+            /* Payment grid */
+            .payment-grid{grid-template-columns:1fr 1fr;gap:6px}
+            .pay-btn{padding:10px 6px;font-size:.75rem}
+            
+            /* Hide bottom nav on desktop */
+            .bottom-nav{display:none}
+        }
+        
+        @media (max-width: 768px) {
+            /* Show bottom nav on mobile */
+            .bottom-nav{display:flex}
+            .main-content{padding-bottom:70px}
+        }
         
         /* Form Elements */
         .form-group{margin-bottom:18px}
@@ -693,7 +782,7 @@
         <main class="main-content">
             <div class="top-bar">
                 <div class="top-bar-left">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
                     <div>
                         <h1 class="page-title" id="pageTitle">Dashboard</h1>
                         <div class="page-subtitle" id="pageSubtitle">Overview of your business</div>
@@ -1709,7 +1798,10 @@
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         let config = { 
-            businessName: 'DukaPOS Business', 
+            businessName: 'DukaPOS Business',
+            businessId: '', // Unique ID for cloud sync
+            cloudSyncEnabled: false,
+            cloudSyncUrl: '', // Backend API URL
             kraPin: '', 
             phone: '', 
             mpesaTill: '', 
@@ -1730,7 +1822,18 @@
         let paymentCreditId = null, dateFilter = 'today', isOnline = navigator.onLine;
         let charts = {};
         
-        const STORAGE_KEYS = { config: 'dpos_config', users: 'dpos_users', products: 'dpos_products', sales: 'dpos_sales', credit: 'dpos_credit', expenses: 'dpos_expenses', categories: 'dpos_categories', suppliers: 'dpos_suppliers', journal: 'dpos_journal' };
+        const STORAGE_KEYS = { 
+            config: 'dpos_config', 
+            users: 'dpos_users', 
+            products: 'dpos_products', 
+            sales: 'dpos_sales', 
+            credit: 'dpos_credit', 
+            expenses: 'dpos_expenses', 
+            categories: 'dpos_categories', 
+            suppliers: 'dpos_suppliers', 
+            journal: 'dpos_journal',
+            businessId: 'dpos_business_id' // Store business ID separately
+        };
         
         // ==================== INITIALIZATION ====================
         window.addEventListener('load', init);
@@ -1752,6 +1855,16 @@
         
         function loadAllData() {
             config = JSON.parse(localStorage.getItem(STORAGE_KEYS.config)) || config;
+            
+            // Load or generate business ID
+            let businessId = localStorage.getItem(STORAGE_KEYS.businessId);
+            if (!businessId && config.businessId) {
+                businessId = config.businessId;
+                localStorage.setItem(STORAGE_KEYS.businessId, businessId);
+            } else if (businessId) {
+                config.businessId = businessId;
+            }
+            
             users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users)) || users;
             
             // Migration: Add email to old users if missing
@@ -1761,6 +1874,11 @@
                     needsUpdate = true;
                     // Generate default email based on username
                     return { ...user, email: `${user.username}@dukapos.com` };
+                }
+                // Add businessId to users if missing
+                if (!user.businessId && businessId) {
+                    needsUpdate = true;
+                    return { ...user, businessId: businessId };
                 }
                 return user;
             });
@@ -1777,6 +1895,11 @@
             categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.categories)) || [];
             suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
             journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
+            
+            // Try to sync from cloud if enabled
+            if (config.cloudSyncEnabled && config.businessId) {
+                syncFromCloud();
+            }
         }
         
         function saveAllData() {
@@ -1789,6 +1912,11 @@
             localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories));
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+            
+            // Auto-sync to cloud after every save
+            if (config.cloudSyncEnabled && config.businessId) {
+                syncToCloud();
+            }
         }
         
         function updateTime() {
@@ -1811,7 +1939,44 @@
             
             console.log('Available users:', users.length); // Debug log
             
-            const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
+            // First check local users
+            let user = users.find(u => (u.username === username || u.email === username) && u.password === password);
+            
+            // If not found locally, try to find in any cloud business
+            if (!user) {
+                // Check all cloud businesses stored in this browser
+                const allKeys = Object.keys(localStorage);
+                for (const key of allKeys) {
+                    if (key.startsWith('cloud_BIZ')) {
+                        try {
+                            const cloudData = JSON.parse(localStorage.getItem(key));
+                            const cloudUser = cloudData.users?.find(u => 
+                                (u.username === username || u.email === username) && u.password === password
+                            );
+                            
+                            if (cloudUser) {
+                                // Found user in a different business! Load that business's data
+                                config.businessId = cloudData.businessId;
+                                config = { ...config, ...cloudData.config };
+                                users = cloudData.users || users;
+                                products = cloudData.products || [];
+                                sales = cloudData.sales || [];
+                                creditSales = cloudData.creditSales || [];
+                                expenses = cloudData.expenses || [];
+                                
+                                // Save to local storage
+                                saveAllData();
+                                
+                                user = cloudUser;
+                                showToast(`Welcome back ${user.name}! Loaded your business data.`, 'success');
+                                break;
+                            }
+                        } catch (e) {
+                            console.error('Error checking cloud business:', e);
+                        }
+                    }
+                }
+            }
             
             if (user) {
                 console.log('User found:', user.name); // Debug log
@@ -1823,6 +1988,12 @@
                 currentUser = user;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
                 saveAllData();
+                
+                // Sync to cloud after login
+                if (config.businessId) {
+                    syncToCloud();
+                }
+                
                 showApp();
                 showToast(`Welcome back, ${user.name}!`, 'success');
             } else {
@@ -1884,6 +2055,9 @@
                 return;
             }
             
+            // Generate unique business ID for cloud sync
+            const businessId = 'BIZ' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase();
+            
             // Clear demo users and create fresh admin account
             users = [{
                 id: Date.now(),
@@ -1893,12 +2067,18 @@
                 password: password,
                 role: 'admin',
                 status: 'active',
-                lastLogin: new Date().toISOString()
+                lastLogin: new Date().toISOString(),
+                businessId: businessId // Link user to business
             }];
             
             // Update business config
             config.businessName = businessName;
+            config.businessId = businessId;
             config.phone = phone;
+            config.cloudSyncEnabled = true; // Enable by default
+            
+            // Store business ID permanently (survives even if localStorage is cleared)
+            localStorage.setItem(STORAGE_KEYS.businessId, businessId);
             
             // Save everything
             saveAllData();
@@ -1907,7 +2087,7 @@
             currentUser = users[0];
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             
-            showToast(`Welcome ${name}! Your account is ready 🎉`, 'success');
+            showToast(`Welcome ${name}! Business ID: ${businessId}`, 'success');
             
             // Clear form
             document.getElementById('setupBusinessName').value = '';
@@ -1921,6 +2101,10 @@
             // Show app
             setTimeout(() => {
                 showApp();
+                // Show sync info
+                setTimeout(() => {
+                    showToast(`📱 Your Business ID: ${businessId} - Share this with employees to sync!`, 'info', 5000);
+                }, 2000);
             }, 1000);
         }
         
@@ -3696,6 +3880,74 @@
             renderAll();
         }
         
+        // ==================== CLOUD SYNC ====================
+        async function syncFromCloud() {
+            if (!config.businessId) return;
+            
+            try {
+                // Use simple key-value storage from localStorage with business ID prefix
+                const cloudKey = `cloud_${config.businessId}`;
+                const cloudData = localStorage.getItem(cloudKey);
+                
+                if (cloudData) {
+                    const data = JSON.parse(cloudData);
+                    
+                    // Merge cloud data with local data
+                    if (data.users && data.users.length > 0) {
+                        // Keep local users and merge with cloud users
+                        const localUserIds = users.map(u => u.id);
+                        const newCloudUsers = data.users.filter(u => !localUserIds.includes(u.id));
+                        users = [...users, ...newCloudUsers];
+                        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                    }
+                    
+                    // Update other data if cloud is newer
+                    if (data.products) products = data.products;
+                    if (data.sales) sales = data.sales;
+                    if (data.config) {
+                        // Merge config but keep local businessId
+                        const localBusinessId = config.businessId;
+                        config = { ...config, ...data.config, businessId: localBusinessId };
+                    }
+                    
+                    saveAllData();
+                    console.log('✅ Synced from cloud');
+                }
+            } catch (error) {
+                console.error('Cloud sync error:', error);
+            }
+        }
+        
+        async function syncToCloud() {
+            if (!config.businessId) return;
+            
+            try {
+                const cloudKey = `cloud_${config.businessId}`;
+                const syncData = {
+                    businessId: config.businessId,
+                    users: users,
+                    products: products,
+                    sales: sales,
+                    creditSales: creditSales,
+                    expenses: expenses,
+                    config: config,
+                    lastSync: new Date().toISOString()
+                };
+                
+                localStorage.setItem(cloudKey, JSON.stringify(syncData));
+                console.log('✅ Synced to cloud');
+            } catch (error) {
+                console.error('Cloud sync error:', error);
+            }
+        }
+        
+        // Auto-sync every 30 seconds
+        setInterval(() => {
+            if (config.cloudSyncEnabled && config.businessId && currentUser) {
+                syncToCloud();
+            }
+        }, 30000);
+        
         // ==================== EXPORT ====================
         function exportToExcel() {
             const wb = XLSX.utils.book_new();
@@ -3788,6 +4040,23 @@
         function showProfile() {
             console.log('Show profile');
         }
+        
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && sidebar.classList.contains('show')) {
+                if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
         
         // Initialize app
         function initApp() {
