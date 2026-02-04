@@ -2429,6 +2429,25 @@
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             renderSuppliers();
         }
+        
+        // ==================== CREDIT SALES ====================
+        function renderCreditSales() {
+            const today = getTodayDate();
+            const pending = creditSales.filter(c => c.amount - c.paid > 0);
+            const totalCredit = creditSales.reduce((s, c) => s + c.amount, 0);
+            const totalPaid = creditSales.reduce((s, c) => s + c.paid, 0);
+            const totalBalance = totalCredit - totalPaid;
+            
+            document.getElementById('creditTotal').textContent = formatKsh(totalCredit);
+            document.getElementById('creditPaid').textContent = formatKsh(totalPaid);
+            document.getElementById('creditBalance').textContent = formatKsh(totalBalance);
+            
+            document.getElementById('creditTableBody').innerHTML = creditSales.map(c => {
+                const balance = c.amount - c.paid;
+                const isOverdue = c.dueDate && new Date(c.dueDate) < new Date(today) && balance > 0;
+                return `
+                <tr>
+                    <td><strong>${c.customer}</strong></td>
                     <td>${c.phone}</td>
                     <td>${formatKsh(c.amount)}</td>
                     <td style="color:var(--accent-green)">${formatKsh(c.paid)}</td>
