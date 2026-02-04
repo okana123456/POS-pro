@@ -487,6 +487,10 @@
         <div class="login-container">
             <!-- Login Form -->
             <div class="auth-screen active" id="loginForm">
+                <div style="margin-bottom:16px;padding:12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:var(--radius-sm);font-size:.85rem;text-align:center">
+                    <strong style="color:var(--accent-green)">🏪 New Shop Owner?</strong><br>
+                    <span style="color:var(--text-secondary);font-size:.8rem">Click "First Time Setup" below to create your account</span>
+                </div>
                 <div class="login-logo">🏪</div>
                 <h1 class="login-title">DukaPOS Pro</h1>
                 <p class="login-subtitle">Complete Business Management System</p>
@@ -503,7 +507,8 @@
                 </div>
                 <div class="login-footer">
                     <span class="login-link" onclick="showAuthScreen('forgotPassword')">Forgot Password?</span>
-                    <!-- REMOVED: Create Account link (admin-only user creation now) -->
+                    <span style="margin:0 8px;color:var(--text-muted)">•</span>
+                    <span class="login-link" onclick="showAuthScreen('firstSetup')">First Time Setup</span>
                 </div>
                 <div class="login-divider"><span>Quick Demo Access</span></div>
                 <div class="demo-accounts">
@@ -541,6 +546,50 @@
                     <button class="login-btn" onclick="handleForgotPassword()">📧 Send Reset Link</button>
                     <div style="margin-top:16px;padding:12px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary)">
                         ℹ️ For demo purposes, password reset will be simulated. In production, this would send an email with a reset link.
+                    </div>
+                </div>
+            </div>
+
+            <!-- First Time Setup Form -->
+            <div class="auth-screen" id="firstSetupForm">
+                <div class="back-btn" onclick="showAuthScreen('login')">← Back to Login</div>
+                <div class="login-logo">🎉</div>
+                <h1 class="login-title">Welcome to DukaPOS!</h1>
+                <p class="login-subtitle">Create your admin account to get started</p>
+                <div class="login-form">
+                    <div class="login-input-group">
+                        <label class="login-label">Business Name *</label>
+                        <input type="text" class="login-input" id="setupBusinessName" placeholder="e.g., Mary's General Store">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Your Full Name *</label>
+                        <input type="text" class="login-input" id="setupName" placeholder="e.g., Mary Wanjiku">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Email Address *</label>
+                        <input type="email" class="login-input" id="setupEmail" placeholder="your.email@example.com">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Phone Number *</label>
+                        <input type="tel" class="login-input" id="setupPhone" placeholder="0712345678">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Username *</label>
+                        <input type="text" class="login-input" id="setupUsername" placeholder="Choose a username">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Password *</label>
+                        <input type="password" class="login-input" id="setupPassword" placeholder="Create a strong password">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Confirm Password *</label>
+                        <input type="password" class="login-input" id="setupPasswordConfirm" placeholder="Re-enter password">
+                    </div>
+                    <button class="login-btn" onclick="handleFirstTimeSetup()">🚀 Create Account & Start</button>
+                    <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary)">
+                        ✅ This will be your ADMIN account<br>
+                        ✅ You can create staff accounts later in Settings<br>
+                        ✅ All data stored locally on this device
                     </div>
                 </div>
             </div>
@@ -1788,14 +1837,91 @@
                 document.getElementById('loginForm').classList.add('active');
             } else if (screen === 'forgotPassword') {
                 document.getElementById('forgotPasswordForm').classList.add('active');
+            } else if (screen === 'firstSetup') {
+                document.getElementById('firstSetupForm').classList.add('active');
             }
-            // REMOVED: signup screen (admin creates users now)
         }
         
         // REMOVED: Public signup disabled - admin creates users now
         function handleSignup() {
             showToast('Public signup disabled. Contact administrator for account creation.', 'error');
             return;
+        }
+        
+        function handleFirstTimeSetup() {
+            const businessName = document.getElementById('setupBusinessName').value.trim();
+            const name = document.getElementById('setupName').value.trim();
+            const email = document.getElementById('setupEmail').value.trim();
+            const phone = document.getElementById('setupPhone').value.trim();
+            const username = document.getElementById('setupUsername').value.trim();
+            const password = document.getElementById('setupPassword').value;
+            const passwordConfirm = document.getElementById('setupPasswordConfirm').value;
+            
+            // Validation
+            if (!businessName || !name || !email || !phone || !username || !password || !passwordConfirm) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                showToast('Please enter a valid email', 'error');
+                return;
+            }
+            
+            // Check if username already exists
+            if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                showToast('Username already taken. Try another.', 'error');
+                return;
+            }
+            
+            // Clear demo users and create fresh admin account
+            users = [{
+                id: Date.now(),
+                name: name,
+                email: email,
+                username: username,
+                password: password,
+                role: 'admin',
+                status: 'active',
+                lastLogin: new Date().toISOString()
+            }];
+            
+            // Update business config
+            config.businessName = businessName;
+            config.phone = phone;
+            
+            // Save everything
+            saveAllData();
+            
+            // Auto-login the new admin
+            currentUser = users[0];
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            showToast(`Welcome ${name}! Your account is ready 🎉`, 'success');
+            
+            // Clear form
+            document.getElementById('setupBusinessName').value = '';
+            document.getElementById('setupName').value = '';
+            document.getElementById('setupEmail').value = '';
+            document.getElementById('setupPhone').value = '';
+            document.getElementById('setupUsername').value = '';
+            document.getElementById('setupPassword').value = '';
+            document.getElementById('setupPasswordConfirm').value = '';
+            
+            // Show app
+            setTimeout(() => {
+                showApp();
+            }, 1000);
         }
         
         function handleForgotPassword() {
@@ -3659,10 +3785,7 @@
             showToast('No new notifications', 'info');
         }
         
-        function showPr    </script>
-</body>
-</html>
-ofile() {
+        function showProfile() {
             console.log('Show profile');
         }
         
