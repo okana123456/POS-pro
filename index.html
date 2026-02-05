@@ -594,165 +594,53 @@
         .offline-banner.hidden{display:none}
         @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
     
-        /* FIX: Proper responsive scrolling */
-        html, body {
-            overflow-x: hidden;
-            width: 100%;
-            position: relative;
-            -webkit-overflow-scrolling: touch;
-        }
         
-        body {
-            touch-action: pan-y;
-        }
-        
-        /* FIX: Ensure main content doesn't cause horizontal scroll */
-        .main-content, .content-area, .page {
-            max-width: 100vw;
-            overflow-x: hidden;
-        }
-        
-        /* FIX: POS cart scrolling */
-        .cart-items {
-            overflow-y: auto;
-            overflow-x: hidden;
-            max-height: calc(100vh - 550px);
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* FIX: Payment options section scrolling */
-        .payment-section, .mpesa-panel {
-            overflow-y: auto;
-            overflow-x: hidden;
-            max-height: 300px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* FIX: Settings page scrolling */
-        .settings-grid, .form-grid {
-            overflow-x: hidden;
-        }
-        
-        /* FIX: Table horizontal scrolling */
-        .table-container {
-            overflow-x: auto;
-            overflow-y: visible;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
-        }
-
-        /* COMPREHENSIVE MOBILE FIXES */
+        /* SCROLLING FIXES FOR MOBILE */
         @media (max-width: 768px) {
-            /* Fix: Ensure no horizontal scroll on mobile */
-            html, body {
-                max-width: 100vw;
-                overflow-x: hidden !important;
-            }
-            
-            /* Fix: POS container stacking on mobile */
-            .pos-grid, .pos-container {
+            /* Fix: POS layout stacking */
+            .pos-grid {
                 display: flex !important;
                 flex-direction: column !important;
-                height: auto !important;
-                gap: 16px;
             }
             
-            /* Fix: Cart panel proper height on mobile */
-            .pos-right, .cart-panel {
-                max-height: 70vh !important;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-            }
-            
-            /* Fix: Cart items scrollable section */
-            .cart-items, .cart-list {
-                max-height: 200px !important;
+            /* Fix: Cart items scrollable */
+            .cart-items, .cart-list, .item-list {
+                max-height: 30vh !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch !important;
             }
             
-            /* Fix: Payment section always visible */
-            .cart-footer, .payment-section, .mpesa-panel {
-                position: relative !important;
+            /* Fix: Payment section scrollable */
+            .payment-section, .payment-grid, .mpesa-panel {
+                max-height: 35vh !important;
                 overflow-y: auto !important;
-                max-height: 250px !important;
+                overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch !important;
             }
             
-            /* Fix: Complete sale button always accessible */
-            .complete-sale-btn, #completeSaleBtn, button[onclick*="completeSale"] {
+            /* Fix: Complete sale button always visible */
+            .complete-sale-btn, button[onclick*="completeSale"] {
                 position: sticky !important;
                 bottom: 0 !important;
-                z-index: 10 !important;
-                width: 100% !important;
-                margin-top: 12px !important;
+                z-index: 999 !important;
+                background: var(--gradient-green) !important;
             }
             
             /* Fix: Settings page scrolling */
-            .settings-grid, .form-grid, .settings-section {
+            .settings-grid, .form-grid {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
                 overflow-x: hidden !important;
-                width: 100% !important;
-            }
-            
-            /* Fix: Product grid proper spacing */
-            .products-grid, .product-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-                gap: 12px !important;
-                max-height: 50vh !important;
-                overflow-y: auto !important;
             }
             
             /* Fix: Table scrolling */
             .table-container {
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
-            /* Fix: Modal proper sizing */
-            .modal, .modal-overlay .modal {
-                max-height: 90vh !important;
-                overflow-y: auto !important;
-                width: 95% !important;
-                margin: auto !important;
             }
         }
-        
-        @media (max-width: 480px) {
-            /* Extra small screens */
-            .cart-items, .cart-list {
-                max-height: 150px !important;
-            }
-            
-            .products-grid, .product-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
-                max-height: 40vh !important;
-            }
-        }
-
-        /* TOUCH-FRIENDLY IMPROVEMENTS */
-        @media (max-width: 768px) {
-            /* Larger tap targets for mobile */
-            button, .btn, .nav-item, .product-card {
-                min-height: 44px !important;
-                min-width: 44px !important;
-            }
-            
-            /* Larger form inputs */
-            input, select, textarea {
-                min-height: 44px !important;
-                font-size: 16px !important; /* Prevents zoom on iOS */
-            }
-            
-            /* Payment option buttons larger */
-            .payment-option, .pay-btn {
-                padding: 16px !important;
-                min-height: 60px !important;
-            }
-        }
-</style>
+    </style>
 </head>
 <body>
     <!-- Offline Banner -->
@@ -2520,13 +2408,52 @@
             }
         }
         
-        function handleForgotPassword() {
+                function handleForgotPassword() {
             const email = document.getElementById('forgotEmail').value.trim();
             
             if (!email) {
                 showToast('Please enter your email address', 'error');
                 return;
             }
+            
+            // Try Firebase password reset first
+            if (auth && navigator.onLine) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => {
+                        showToast('Password reset link sent to your email!', 'success', 'Check Your Email');
+                        setTimeout(() => {
+                            showAuthScreen('login');
+                            document.getElementById('forgotEmail').value = '';
+                        }, 2000);
+                    })
+                    .catch((error) => {
+                        console.error('Firebase reset error:', error);
+                        // Fallback to local demo if Firebase fails
+                        handleLocalPasswordReset(email);
+                    });
+            } else {
+                // Offline or Firebase not available - use local demo
+                handleLocalPasswordReset(email);
+            }
+        }
+        
+        function handleLocalPasswordReset(email) {
+            const user = users.find(u => u.email === email);
+            
+            if (user) {
+                showToast('Password reset link sent!', 'success', 'Check Your Email');
+                console.log(`Password for ${email}: ${user.password}`);
+                setTimeout(() => {
+                    showToast(`Demo: Your password is "${user.password}"`, 'info', 'Password Retrieved');
+                }, 2000);
+                setTimeout(() => {
+                    showAuthScreen('login');
+                    document.getElementById('forgotEmail').value = '';
+                }, 3000);
+            } else {
+                showToast('No account found with this email', 'error');
+            }
+        }
             
             const user = users.find(u => u.email === email);
             
@@ -3231,133 +3158,9 @@
             }, 3000); // Poll every 3 seconds
         }
         
-        // FIX: Enhanced complete sale function
-        async function completeSale() {
-            console.log('[Sale] Starting sale completion...');
-            
-            if (cart.length === 0) {
-                showAlert('Cart is empty!', 'error');
-                return;
-            }
-            
-            const total = calculateCartTotal();
-            
-            // Validate M-Pesa payment if selected
-            if (selectedPaymentMethod === 'mpesa' || selectedPaymentMethod === 'M-Pesa') {
-                const phone = document.getElementById('mpesaPhone') || 
-                             document.getElementById('mpesaPhoneConfirm') || 
-                             document.getElementById('mpesaPhoneIntasend');
-                
-                if (phone && !phone.value) {
-                    showAlert('Please enter M-Pesa phone number', 'error');
-                    return;
-                }
-            }
-            
-            // Disable button to prevent double submission
-            const btn = document.getElementById('completeSaleBtn') || 
-                       document.querySelector('.complete-sale-btn') ||
-                       document.querySelector('button[onclick*="completeSale"]');
-            
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '⏳ Processing...';
-            }
-            
-            try {
-                const sale = {
-                    id: 'SALE-' + Date.now(),
-                    date: new Date().toISOString(),
-                    items: [...cart],
-                    subtotal: calculateSubtotal(),
-                    tax: calculateTax(),
-                    total: total,
-                    paymentMethod: selectedPaymentMethod,
-                    cashier: currentUser ? currentUser.email : 'admin',
-                    receiptNo: generateReceiptNumber()
-                };
-                
-                // Save sale
-                if (isOfflineMode || !navigator.onLine) {
-                    // Offline mode - save locally
-                    sales.push(sale);
-                    saveOfflineData();
-                    performOfflineOperation('sale', sale);
-                    showAlert('Sale completed offline. Will sync when online.', 'success');
-                } else {
-                    // Online mode - save to Firebase
-                    sales.push(sale);
-                    await saveSaleToFirebase(sale);
-                    saveOfflineData(); // Also save locally as backup
-                    showAlert('Sale completed successfully!', 'success');
-                }
-                
-                // Update stock
-                updateProductStock();
-                
-                // Print receipt if enabled
-                if (settings.autoPrint) {
-                    printReceipt(sale);
-                }
-                
-                // Clear cart
-                clearCart();
-                
-                // Refresh displays
-                loadSales();
-                updateDashboard();
-                
-            } catch (error) {
-                console.error('[Sale] Error:', error);
-                showAlert('Error completing sale: ' + error.message, 'error');
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '✓ Complete Sale';
-                }
-            }
-        }
-        
-        // FIX: Helper function to calculate cart total
-        function calculateCartTotal() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = subtotal * (settings.taxRate / 100);
-            return subtotal + tax;
-        }
-        
-        function calculateSubtotal() {
-            return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        }
-        
-        function calculateTax() {
-            return calculateSubtotal() * (settings.taxRate / 100);
-        }
-        
-        function generateReceiptNumber() {
-            return 'REC-' + Date.now().toString().slice(-8);
-        }
-        
-        function updateProductStock() {
-            cart.forEach(cartItem => {
-                const product = products.find(p => p.id === cartItem.id);
-                if (product) {
-                    product.stock -= cartItem.quantity;
-                }
-            });
-            saveOfflineData();
-        }
-        
-        async function saveSaleToFirebase(sale) {
-            if (!db || !currentUser) return;
-            
-            try {
-                await db.collection('sales').add(sale);
-                console.log('[Firebase] Sale saved:', sale.id);
-            } catch (error) {
-                console.error('[Firebase] Save error:', error);
-                throw error;
-            }
-        }
+        function completeSale() {
+            if (cart.length === 0) return;
+            if (selectedPayment === 'Credit') { openModal('creditSaleModal'); return; }
             processSale();
         }
         
@@ -4868,144 +4671,7 @@
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
         window.addEventListener('load', updateOnlineStatus);
-        // FIX: Auto-sync when connection restored
-        window.addEventListener('online', function() {
-            updateOnlineStatus();
-            if (isOfflineMode && currentUser) {
-                isOfflineMode = false;
-                syncOfflineOperations();
-            }
-        });
         
-        // Load pending sync operations
-        const pendingSync = localStorage.getItem('pending_sync');
-        if (pendingSync) {
-            pendingSyncOperations = JSON.parse(pendingSync);
-        }
-
-        
-    
-        // FIX: Enhanced offline mode operations
-        function performOfflineOperation(operation, data) {
-            if (!isOfflineMode) {
-                return false;
-            }
-            
-            // Queue operation for sync when online
-            const syncOperation = {
-                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                timestamp: new Date().toISOString(),
-                operation: operation,
-                data: data
-            };
-            
-            pendingSyncOperations.push(syncOperation);
-            localStorage.setItem('pending_sync', JSON.stringify(pendingSyncOperations));
-            
-            console.log('[Offline] Operation queued:', operation);
-            return true;
-        }
-        
-        // FIX: Sync offline operations when back online
-        async function syncOfflineOperations() {
-            if (!navigator.onLine || pendingSyncOperations.length === 0) {
-                return;
-            }
-            
-            console.log('[Sync] Syncing', pendingSyncOperations.length, 'operations...');
-            
-            const operations = [...pendingSyncOperations];
-            pendingSyncOperations = [];
-            
-            for (const op of operations) {
-                try {
-                    // Execute the queued operation
-                    await executeOperation(op);
-                    console.log('[Sync] Completed:', op.operation);
-                } catch (error) {
-                    console.error('[Sync] Failed:', op.operation, error);
-                    // Re-queue failed operation
-                    pendingSyncOperations.push(op);
-                }
-            }
-            
-            localStorage.setItem('pending_sync', JSON.stringify(pendingSyncOperations));
-            
-            if (pendingSyncOperations.length === 0) {
-                showAlert('All offline changes synced successfully!', 'success');
-            }
-        }
-        
-        async function executeOperation(op) {
-            // Execute based on operation type
-            switch(op.operation) {
-                case 'sale':
-                    await saveSaleToFirebase(op.data);
-                    break;
-                case 'product':
-                    await saveProductToFirebase(op.data);
-                    break;
-                case 'customer':
-                    await saveCustomerToFirebase(op.data);
-                    break;
-                default:
-                    console.warn('[Sync] Unknown operation:', op.operation);
-            }
-        }
-
-
-        function renderAllData() {
-            if (!currentUser) return;
-            
-            console.log('[Render] Rendering all data...');
-            
-            // Render products
-            loadProducts();
-            renderPOSProducts();
-            
-            // Render sales
-            loadSales();
-            renderSalesTable();
-            
-            // Render customers
-            loadCustomers();
-            renderCustomersTable();
-            
-            // Update dashboard
-            updateDashboard();
-            
-            console.log('[Render] All data rendered');
-        }
-
-
-        // FIX: Alert function
-        function showAlert(message, type = 'info') {
-            console.log('[Alert]', type.toUpperCase() + ':', message);
-            
-            // Create alert element
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-' + type;
-            alert.innerHTML = '<span class="alert-icon">' + getAlertIcon(type) + '</span><span>' + message + '</span>';
-            alert.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;max-width:400px;animation:slideIn 0.3s;';
-            
-            document.body.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.style.animation = 'slideOut 0.3s';
-                setTimeout(() => alert.remove(), 300);
-            }, 3000);
-        }
-        
-        function getAlertIcon(type) {
-            const icons = {
-                'success': '✓',
-                'error': '✗',
-                'warning': '⚠',
-                'info': 'ℹ'
-            };
-            return icons[type] || 'ℹ';
-        }
-
-</script>
+    </script>
 </body>
 </html>
