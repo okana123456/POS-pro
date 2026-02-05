@@ -110,7 +110,7 @@
         .top-btn:hover{background:var(--bg-card-hover);color:var(--text-primary)}
         .notification-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;background:var(--accent-red);border-radius:50%}
         .current-time{font-size:.85rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
-        .page-content{flex:1;padding:24px;overflow-y:auto}
+        .page-content{flex:1;padding:24px;overflow-y:auto;height:calc(100vh - 64px);-webkit-overflow-scrolling:touch}
         
         /* Tab Content */
         .tab-content{display:none}
@@ -350,7 +350,7 @@
         .inventory-card-stock.out{background:rgba(239,68,68,.15);color:var(--accent-red)}
         
         /* Modals */
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;opacity:0;visibility:hidden;transition:all .3s}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;opacity:0;visibility:hidden;transition:all .3s}
         .modal-overlay.show{opacity:1;visibility:visible}
         .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:480px;max-height:90vh;overflow:hidden;transform:scale(.9);transition:transform .3s}
         .modal.large{max-width:600px}
@@ -359,7 +359,7 @@
         .modal-title{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px}
         .modal-close{width:36px;height:36px;background:var(--bg-dark);border:none;border-radius:50%;color:var(--text-secondary);cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
         .modal-close:hover{color:var(--text-primary);background:var(--bg-card-hover)}
-        .modal-body{padding:24px;overflow-y:auto;max-height:calc(80vh - 160px)}
+        .modal-body{padding:24px;overflow-y:auto;max-height:calc(80vh - 160px);-webkit-overflow-scrolling:touch}
         .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;background:var(--bg-dark)}
         .modal-btn{flex:1;padding:14px;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;transition:all .2s;font-size:.95rem;border:none}
         .modal-btn.cancel{background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary)}
@@ -551,7 +551,7 @@
             .stats-grid{grid-template-columns:1fr}
             .quick-actions{grid-template-columns:1fr 1fr}
             .pos-product-grid{grid-template-columns:repeat(2,1fr)}
-            .page-content{padding:16px}
+            .page-content{padding:16px;height:calc(100vh - 56px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px}
             .pos-cart{position:fixed;bottom:0;left:0;right:0;height:65vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;transform:translateY(calc(100% - 80px));transition:transform .3s;z-index:100}
             .pos-cart.expanded{transform:translateY(0)}
             .pos-products{height:calc(100vh - 180px);padding-bottom:90px}
@@ -1670,7 +1670,7 @@
             <div class="modal-body">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Product Name *</label><input type="text" class="form-input" id="newProductName" placeholder="e.g., Jogoo Maize Flour 2kg"></div>
-                    <div class="form-group"><label class="form-label">Category *</label><select class="form-select" id="newProductCategory"></select></div>
+                    <div class="form-group"><label class="form-label">Category (auto-generated, optional)</label><select class="form-select" id="newProductCategory"></select></div>
                 </div>
                 <!-- ADDED: SKU field -->
                 <div class="form-group">
@@ -2095,6 +2095,7 @@
                 user.lastLogin = new Date().toISOString();
                 currentUser = user;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('lastLoggedUser', JSON.stringify(user)); // Persist across page refreshes
                 saveAllData();
                 
                 if (config.businessId) {
@@ -2308,6 +2309,7 @@
                 const userName = currentUser.name;
                 currentUser = null;
                 sessionStorage.removeItem('currentUser');
+                localStorage.removeItem('lastLoggedUser'); // Clear persisted user
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('appContainer').classList.add('hidden');
                 document.getElementById('loginUsername').value = '';
@@ -2328,6 +2330,7 @@
                     status: 'active'
                 };
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                localStorage.setItem('lastLoggedUser', JSON.stringify(currentUser)); // Persist across refreshes
             }
             
             // Otherwise use currentUser from session/localStorage
@@ -3184,10 +3187,10 @@
             openModal('addProductModal');
         }
         
-        // UPDATED: Added SKU auto-generation
+        // UPDATED: Added SKU auto-generation and auto-category detection
         function addNewProduct() {
             const name = document.getElementById('newProductName').value.trim();
-            const category = document.getElementById('newProductCategory').value;
+            let category = document.getElementById('newProductCategory').value;
             const cost = parseFloat(document.getElementById('newProductCost').value) || 0;
             const price = parseFloat(document.getElementById('newProductPrice').value) || 0;
             const stock = parseInt(document.getElementById('newProductStock').value) || 0;
@@ -3195,6 +3198,35 @@
             const vat = parseInt(document.getElementById('newProductVat').value) || 16;
             
             if (!name || !price) { showToast('Enter product name and price', 'error'); return; }
+            
+            // Auto-detect category from product name if not selected
+            if (!category) {
+                const nameLower = name.toLowerCase();
+                if (nameLower.includes('flour') || nameLower.includes('maize') || nameLower.includes('rice') || nameLower.includes('bread')) {
+                    category = 'Food & Grains';
+                } else if (nameLower.includes('soap') || nameLower.includes('detergent') || nameLower.includes('clean')) {
+                    category = 'Cleaning';
+                } else if (nameLower.includes('oil') || nameLower.includes('cooking') || nameLower.includes('fat')) {
+                    category = 'Cooking';
+                } else if (nameLower.includes('drink') || nameLower.includes('soda') || nameLower.includes('juice') || nameLower.includes('water')) {
+                    category = 'Beverages';
+                } else if (nameLower.includes('milk') || nameLower.includes('yogurt') || nameLower.includes('cheese')) {
+                    category = 'Dairy';
+                } else if (nameLower.includes('phone') || nameLower.includes('charger') || nameLower.includes('cable')) {
+                    category = 'Electronics';
+                } else if (nameLower.includes('book') || nameLower.includes('pen') || nameLower.includes('paper')) {
+                    category = 'Stationery';
+                } else {
+                    category = 'General';
+                }
+                
+                // Add category if it doesn't exist
+                if (!categories.includes(category)) {
+                    categories.push(category);
+                    categories.sort();
+                    localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories));
+                }
+            }
             
             // ADDED: SKU generation
             let sku = document.getElementById('newProductSKU')?.value.trim();
@@ -3209,7 +3241,7 @@
             products.push({ id: 'P' + Date.now(), sku, name, category, cost, price, stock, reorder, vat });
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             closeModal('addProductModal');
-            showToast('Product added successfully', 'success');
+            showToast(`Product added to ${category}`, 'success');
             renderInventory();
             renderPOS();
         }
@@ -4253,6 +4285,19 @@
         // Initialize app
         function initApp() {
             loadAllData();
+            
+            // Check for persisted user first (localStorage), then session
+            const persistedUser = localStorage.getItem('lastLoggedUser');
+            const sessionUser = sessionStorage.getItem('currentUser');
+            
+            if (sessionUser) {
+                currentUser = JSON.parse(sessionUser);
+            } else if (persistedUser) {
+                // Restore from localStorage if session expired
+                currentUser = JSON.parse(persistedUser);
+                sessionStorage.setItem('currentUser', persistedUser);
+            }
+            
             if (!currentUser) {
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('appContainer').classList.add('hidden');
