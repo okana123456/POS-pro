@@ -425,7 +425,7 @@
             .pos-cart.expanded{transform:translateY(0)}
             .cart-header{cursor:pointer;flex-shrink:0}
             .cart-items{flex:1;overflow-y:auto;min-height:0}
-            .cart-footer{flex-shrink:0;max-height:none}
+            .cart-footer{flex-shrink:0;max-height:none;overflow-y:auto}
             .pos-product-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:calc(100vh - 200px)}
             .product-card{padding:12px}
             .product-emoji{font-size:2rem}
@@ -486,6 +486,10 @@
         
         /* Make payment options section portrait (single column) on all devices */
         .payment-options-section .form-row{grid-template-columns:1fr !important}
+        
+        /* Make settings cards narrower on desktop so payment options are visible */
+        #settingsTab .dashboard-grid-full{grid-template-columns:1fr;max-width:1400px}
+        #settingsTab .dashboard-grid-full > .card{max-width:700px}
         
         /* Quick Add Modal */
         .quick-add-product{text-align:center;margin-bottom:24px}
@@ -1256,7 +1260,30 @@
                         </table>
                     </div>
                 </div>
- class="inventory-header">
+                
+                <!-- Chart of Accounts Tab -->
+                <div class="tab-content" id="accountsTab">
+                    <div class="inventory-header">
+                        <h2 class="inventory-title">Chart of Accounts</h2>
+                        <div class="inventory-actions">
+                            <button class="inv-btn primary" onclick="showAddAccountModal()">➕ Add Account</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Account Code</th><th>Account Name</th><th>Type</th><th>Balance</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="accountsTableBody">
+                                <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No accounts configured yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Journal Entries Tab -->
+                <div class="tab-content" id="journalTab">
+                    <div class="inventory-header">
                         <h2 class="inventory-title">Journal Entries</h2>
                         <div class="inventory-actions">
                             <button class="inv-btn primary" onclick="showAddJournalModal()">➕ New Entry</button>
@@ -3704,6 +3731,18 @@
                     <td><button class="action-btn primary" onclick="viewJournalEntry('${j.id}')">View</button></td>
                 </tr>
             `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No journal entries</td></tr>';
+        }
+        
+        function showAddJournalModal() {
+            showToast('Journal entry feature coming soon!', 'info');
+        }
+        
+        function showAddAccountModal() {
+            showToast('Chart of accounts feature coming soon!', 'info');
+        }
+        
+        function viewJournalEntry(id) {
+            showToast('Journal entry details coming soon!', 'info');
         }
         // ==================== REPORTS & ANALYTICS ====================
         function renderReports() {
