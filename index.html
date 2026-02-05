@@ -123,7 +123,7 @@
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
         .notification-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;background:var(--accent-red);border-radius:50%}
         .current-time{font-size:.85rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
-        .page-content{flex:1;padding:24px;overflow-y:auto;height:calc(100vh - 64px);-webkit-overflow-scrolling:touch}
+        .page-content{flex:1;padding:24px;overflow-y:auto;overflow-x:auto;height:calc(100vh - 64px);-webkit-overflow-scrolling:touch}
         
         /* Tab Content */
         .tab-content{display:none;overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -176,11 +176,11 @@
         
         /* Dashboard Grid */
         .dashboard-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px}
-        .dashboard-grid-full{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+        .dashboard-grid-full{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch}
         .dashboard-grid-triple{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px}
         
         /* Cards */
-        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;min-width:300px}
         .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
         .card-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:10px}
         .card-title-icon{width:10px;height:10px;border-radius:50%}
@@ -566,7 +566,7 @@
             .stats-grid{grid-template-columns:1fr}
             .quick-actions{grid-template-columns:1fr 1fr}
             .pos-product-grid{grid-template-columns:repeat(2,1fr)}
-            .page-content{padding:16px;height:calc(100vh - 56px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px}
+            .page-content{padding:16px;height:calc(100vh - 56px);overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px}
             .pos-cart{position:fixed;bottom:0;left:0;right:0;height:65vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;transform:translateY(calc(100% - 80px));transition:transform .3s;z-index:100}
             .pos-cart.expanded{transform:translateY(0)}
             .pos-products{height:calc(100vh - 180px);padding-bottom:90px}
@@ -2407,32 +2407,44 @@
                 // Use Firebase's built-in password reset email functionality
                 showToast('Sending password reset email...', 'info');
                 
+                console.log('Attempting to send password reset to:', email);
                 await auth.sendPasswordResetEmail(email);
                 
-                showToast('Password reset email sent!', 'success', 'Check Your Email');
-                showToast('Check your inbox and spam folder for the reset link', 'info');
+                showToast('✅ Password reset email sent!', 'success', 'Check Your Email');
+                console.log('Password reset email sent successfully to:', email);
+                
+                setTimeout(() => {
+                    showToast('📧 Check your inbox and spam folder for the reset link', 'info');
+                }, 1500);
                 
                 // Go back to login after showing success
                 setTimeout(() => {
                     showAuthScreen('login');
                     document.getElementById('forgotEmail').value = '';
-                }, 3000);
+                }, 4000);
                 
             } catch (error) {
                 console.error('Password reset error:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
                 
                 let errorMsg = 'Failed to send reset email. ';
                 
                 if (error.code === 'auth/user-not-found') {
-                    errorMsg += 'No account found with this email address.';
+                    errorMsg = '❌ No account exists with this email. Please check the email or sign up first.';
                 } else if (error.code === 'auth/invalid-email') {
-                    errorMsg += 'Invalid email address format.';
+                    errorMsg = '❌ Invalid email address format.';
                 } else if (error.code === 'auth/too-many-requests') {
-                    errorMsg += 'Too many attempts. Please try again later.';
+                    errorMsg = '⚠️ Too many attempts. Please try again in a few minutes.';
                 } else if (error.code === 'auth/network-request-failed' || error.message.includes('network')) {
-                    errorMsg += 'Network error. Please check your connection.';
+                    errorMsg = '🌐 Network error. Please check your internet connection.';
                 } else {
                     errorMsg += error.message;
+                }
+                
+                showToast(errorMsg, 'error');
+            }
+        }
                 }
                 
                 showToast(errorMsg, 'error');
