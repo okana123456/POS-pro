@@ -447,6 +447,9 @@
             .form-input,.form-select,.form-textarea{font-size:.85rem;padding:10px 12px}
             .form-row{grid-template-columns:1fr}
             
+            /* Make payment options section portrait on mobile */
+            .payment-options-section .form-row{grid-template-columns:1fr !important}
+            
             /* Charts */
             .chart-container{height:250px}
             
@@ -480,6 +483,9 @@
         .form-input::placeholder{color:var(--text-muted)}
         .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
         .form-hint{font-size:.75rem;color:var(--text-muted);margin-top:6px}
+        
+        /* Make payment options section portrait (single column) on all devices */
+        .payment-options-section .form-row{grid-template-columns:1fr !important}
         
         /* Quick Add Modal */
         .quick-add-product{text-align:center;margin-bottom:24px}
@@ -1473,7 +1479,7 @@
                                 </div>
                                 
                                 <!-- M-PESA Payment Options -->
-                                <div style="margin-top:24px;padding:16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;">
+                                <div class="payment-options-section" style="margin-top:24px;padding:16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;">
                                     <h4 style="margin-bottom:16px;font-size:1.1rem;color:var(--accent-green);">💳 M-PESA Payment Methods</h4>
                                     <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">Configure your M-PESA payment options. Customers will see these when making payments.</p>
                                     
@@ -2714,7 +2720,12 @@
         }
         
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobileOverlay').classList.toggle('show'); }
-        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobileOverlay').classList.remove('show'); }
+        function closeSidebar() { 
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('open');
+            sidebar.classList.remove('show'); // Also remove mobile 'show' class
+            document.getElementById('mobileOverlay').classList.remove('show'); 
+        }
         function toggleCartMobile() { document.getElementById('posCart').classList.toggle('expanded'); }
         
         function renderAll() {
