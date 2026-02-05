@@ -2254,14 +2254,6 @@
                 showToast(errorMsg, 'error');
             }
         }
-                
-                // Reset reCAPTCHA
-                if (recaptchaVerifier) {
-                    recaptchaVerifier.clear();
-                    recaptchaVerifier = null;
-                }
-            }
-        }
         
         function handleForgotPassword() {
             const email = document.getElementById('forgotEmail').value.trim();
