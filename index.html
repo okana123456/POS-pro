@@ -29,9 +29,9 @@
         body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-dark);color:var(--text-primary);min-height:100vh;overflow-x:hidden}
         
         /* Login Screen */
-        .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0a0e1a 0%,#1e1b4b 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+        .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0a0e1a 0%,#1e1b4b 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;overflow-y:auto}
         .login-screen.hidden{display:none}
-        .login-container{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:40px;width:100%;max-width:420px;text-align:center}
+        .login-container{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:40px;width:100%;max-width:420px;text-align:center;margin:auto;max-height:90vh;overflow-y:auto}
         .login-logo{font-size:4rem;margin-bottom:16px}
         .login-title{font-size:1.8rem;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .login-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
@@ -71,7 +71,7 @@
         .app-container.hidden{display:none}
         
         /* Sidebar */
-        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:transform .3s}
+        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:transform .3s;overflow-y:auto}
         .sidebar-header{padding:20px;border-bottom:1px solid var(--border)}
         .logo{display:flex;align-items:center;gap:12px}
         .logo-icon{width:44px;height:44px;background:var(--gradient-blue);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:var(--shadow-glow-blue)}
@@ -104,7 +104,7 @@
         .logout-btn:hover{color:var(--accent-red);background:rgba(239,68,68,.1)}
         
         /* Main Content */
-        .main-content{flex:1;margin-left:260px;min-height:100vh;display:flex;flex-direction:column}
+        .main-content{flex:1;margin-left:260px;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
         .top-bar{height:64px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
         .top-bar-left{display:flex;align-items:center;gap:16px}
         .mobile-menu-btn{display:none;width:40px;height:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);font-size:1.2rem}
@@ -116,6 +116,11 @@
         .search-box input::placeholder{color:var(--text-muted)}
         .top-btn{width:40px;height:40px;border:1px solid var(--border);background:var(--bg-card);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);transition:all .2s;position:relative}
         .top-btn:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+        .sync-status{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);font-size:.85rem;font-weight:500}
+        .sync-status.online{color:var(--accent-green);border-color:rgba(16,185,129,0.3)}
+        .sync-status.offline{color:var(--accent-yellow);border-color:rgba(245,158,11,0.3)}
+        .sync-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
         .notification-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;background:var(--accent-red);border-radius:50%}
         .current-time{font-size:.85rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
         .page-content{flex:1;padding:24px;overflow-y:auto;height:calc(100vh - 64px);-webkit-overflow-scrolling:touch}
@@ -358,9 +363,9 @@
         .inventory-card-stock.out{background:rgba(239,68,68,.15);color:var(--accent-red)}
         
         /* Modals */
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;opacity:0;visibility:hidden;transition:all .3s}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;opacity:0;visibility:hidden;transition:all .3s;overflow-y:auto}
         .modal-overlay.show{opacity:1;visibility:visible}
-        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:480px;max-height:90vh;overflow:hidden;transform:scale(.9);transition:transform .3s}
+        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;transform:scale(.9);transition:transform .3s;margin:auto}
         .modal.large{max-width:600px}
         .modal-overlay.show .modal{transform:scale(1)}
         .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -583,9 +588,19 @@
         
         /* Print Styles */
         @media print{body *{visibility:hidden}.receipt,.receipt *{visibility:visible}.receipt{position:absolute;left:0;top:0;width:80mm}}
+        
+        /* Offline Banner */
+        .offline-banner{position:fixed;top:64px;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;padding:12px 24px;text-align:center;font-weight:600;font-size:.9rem;z-index:60;box-shadow:0 4px 6px rgba(0,0,0,0.3);animation:slideDown .3s ease}
+        .offline-banner.hidden{display:none}
+        @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
     </style>
 </head>
 <body>
+    <!-- Offline Banner -->
+    <div class="offline-banner hidden" id="offlineBanner">
+        ⚠️ You are currently offline. All data is being saved locally and will sync when connection is restored.
+    </div>
+    
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
@@ -807,6 +822,10 @@
                     </div>
                 </div>
                 <div class="top-bar-right">
+                    <div class="sync-status online" id="syncStatus">
+                        <span class="sync-dot"></span>
+                        <span id="syncText">Online</span>
+                    </div>
                     <div class="current-time" id="currentTime">--:--</div>
                     <div class="search-box">
                         <span>🔍</span>
@@ -1446,20 +1465,71 @@
                                     <label class="form-label">KRA PIN</label>
                                     <input type="text" class="form-input" id="settingKraPin" placeholder="P000000000X">
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label">Phone Number</label>
-                                        <input type="text" class="form-input" id="settingPhone" placeholder="0712345678">
+                                <div class="form-group">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="text" class="form-input" id="settingPhone" placeholder="0712345678">
+                                </div>
+                                
+                                <!-- M-PESA Payment Options -->
+                                <div style="margin-top:24px;padding:16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;">
+                                    <h4 style="margin-bottom:16px;font-size:1.1rem;color:var(--accent-green);">💳 M-PESA Payment Methods</h4>
+                                    <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">Configure your M-PESA payment options. Customers will see these when making payments.</p>
+                                    
+                                    <!-- Paybill -->
+                                    <div style="margin-bottom:20px;padding:16px;background:var(--bg-dark);border-radius:8px;">
+                                        <h5 style="margin-bottom:12px;font-size:1rem;display:flex;align-items:center;gap:8px;">
+                                            📱 M-PESA Paybill
+                                        </h5>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Business Number (Paybill)</label>
+                                                <input type="text" class="form-input" id="settingMpesaPaybillNumber" placeholder="e.g., 123456" style="font-family:'JetBrains Mono',monospace;">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Account Number</label>
+                                                <input type="text" class="form-input" id="settingMpesaPaybillAccount" placeholder="Account number" style="font-family:'JetBrains Mono',monospace;">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label">M-Pesa Till/Paybill *</label>
-                                        <input type="text" class="form-input" id="settingMpesa" placeholder="123456" style="font-size:1.1rem; font-family:'JetBrains Mono',monospace; letter-spacing:1px;">
-                                        <div style="margin-top:8px; padding:10px; background:rgba(59,130,246,0.1); border-left:3px solid #3b82f6; border-radius:4px; font-size:0.8rem; color:var(--text-secondary);">
-                                            <strong style="color:#3b82f6;">💡 Important:</strong> Customers will see this number when paying via M-Pesa. Make sure it's correct!
+                                    
+                                    <!-- Till Number -->
+                                    <div style="margin-bottom:20px;padding:16px;background:var(--bg-dark);border-radius:8px;">
+                                        <h5 style="margin-bottom:12px;font-size:1rem;display:flex;align-items:center;gap:8px;">
+                                            🏪 M-PESA Buy Goods (Till)
+                                        </h5>
+                                        <div class="form-group">
+                                            <label class="form-label">Till Number</label>
+                                            <input type="text" class="form-input" id="settingMpesa" placeholder="e.g., 123456" style="font-family:'JetBrains Mono',monospace;letter-spacing:1px;">
+                                            <div style="margin-top:8px;padding:10px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;border-radius:4px;font-size:0.8rem;color:var(--text-secondary);">
+                                                <strong style="color:#3b82f6;">💡 Note:</strong> Customers will see this number when paying via M-Pesa. Make sure it's correct!
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pochi la Biashara -->
+                                    <div style="margin-bottom:20px;padding:16px;background:var(--bg-dark);border-radius:8px;">
+                                        <h5 style="margin-bottom:12px;font-size:1rem;display:flex;align-items:center;gap:8px;">
+                                            💼 Pochi la Biashara
+                                        </h5>
+                                        <div class="form-group">
+                                            <label class="form-label">Pochi Phone Number</label>
+                                            <input type="text" class="form-input" id="settingMpesaPochi" placeholder="e.g., 0712345678" style="font-family:'JetBrains Mono',monospace;">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Send Money -->
+                                    <div style="margin-bottom:0;padding:16px;background:var(--bg-dark);border-radius:8px;">
+                                        <h5 style="margin-bottom:12px;font-size:1rem;display:flex;align-items:center;gap:8px;">
+                                            💸 M-PESA Send Money
+                                        </h5>
+                                        <div class="form-group">
+                                            <label class="form-label">Recipient Phone Number</label>
+                                            <input type="text" class="form-input" id="settingMpesaSend" placeholder="e.g., 0712345678" style="font-family:'JetBrains Mono',monospace;">
                                         </div>
                                     </div>
                                 </div>
-                                <button class="inv-btn success" onclick="saveSettings()">💾 Save Settings</button>
+                                
+                                <button class="inv-btn success" onclick="saveSettings()" style="margin-top:16px;">💾 Save Settings</button>
                                 <!-- ADDED: Client onboarding button -->
                                 <button class="inv-btn primary" onclick="showOnboardModal()" style="margin-top:12px">🚀 Onboard New Client</button>
                             </div>
@@ -1699,6 +1769,33 @@
                 </div>
             </div>
             <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('addProductModal')">Cancel</button><button class="modal-btn success" onclick="addNewProduct()">Add Product</button></div>
+        </div>
+    </div>
+    
+    <!-- Edit Product Modal -->
+    <div class="modal-overlay" id="editProductModal" onclick="if(event.target===this)closeModal('editProductModal')">
+        <div class="modal large">
+            <div class="modal-header"><h3 class="modal-title">✏️ Edit Product</h3><button class="modal-close" onclick="closeModal('editProductModal')">×</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="editProductId">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Product Name *</label><input type="text" class="form-input" id="editProductName" placeholder="e.g., Jogoo Maize Flour 2kg"></div>
+                    <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="editProductCategory"></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Cost Price (Ksh) *</label><input type="number" class="form-input" id="editProductCost" placeholder="150"></div>
+                    <div class="form-group"><label class="form-label">Selling Price (Ksh) *</label><input type="number" class="form-input" id="editProductPrice" placeholder="180"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Stock</label><input type="number" class="form-input" id="editProductStock" placeholder="50"></div>
+                    <div class="form-group"><label class="form-label">Reorder Level</label><input type="number" class="form-input" id="editProductReorder" placeholder="10"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">VAT Category</label>
+                    <select class="form-select" id="editProductVat"><option value="16">Standard Rate (16%)</option><option value="0">Zero Rated (0%)</option><option value="exempt">Exempt</option></select>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('editProductModal')">Cancel</button><button class="modal-btn success" onclick="saveProductEdit()">Save Changes</button></div>
         </div>
     </div>
     
@@ -3262,6 +3359,55 @@
             renderPOS();
         }
         
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            
+            // Populate category dropdown
+            document.getElementById('editProductCategory').innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Populate edit modal with current values
+            document.getElementById('editProductId').value = product.id;
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductCategory').value = product.category;
+            document.getElementById('editProductCost').value = product.cost;
+            document.getElementById('editProductPrice').value = product.price;
+            document.getElementById('editProductStock').value = product.stock;
+            document.getElementById('editProductReorder').value = product.reorder;
+            document.getElementById('editProductVat').value = product.vat;
+            
+            // Show modal
+            openModal('editProductModal');
+        }
+        
+        function saveProductEdit() {
+            const id = document.getElementById('editProductId').value;
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            
+            // Update product with new values
+            product.name = document.getElementById('editProductName').value.trim();
+            product.category = document.getElementById('editProductCategory').value;
+            product.cost = parseFloat(document.getElementById('editProductCost').value) || 0;
+            product.price = parseFloat(document.getElementById('editProductPrice').value) || 0;
+            product.stock = parseInt(document.getElementById('editProductStock').value) || 0;
+            product.reorder = parseInt(document.getElementById('editProductReorder').value) || 10;
+            product.vat = parseInt(document.getElementById('editProductVat').value) || 16;
+            
+            if (!product.name || !product.price) {
+                showToast('Enter product name and price', 'error');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+            
+            closeModal('editProductModal');
+            showToast('Product updated successfully', 'success');
+            renderInventory();
+            renderPOS();
+        }
+        
         // ==================== CATEGORIES ====================
         function renderCategories() {
             document.getElementById('categoriesGrid').innerHTML = categories.map(c => `
@@ -3812,6 +3958,10 @@
             document.getElementById('settingKraPin').value = config.kraPin || '';
             document.getElementById('settingPhone').value = config.phone || '';
             document.getElementById('settingMpesa').value = config.mpesaTill || '';
+            document.getElementById('settingMpesaPaybillNumber').value = config.mpesaPaybillNumber || '';
+            document.getElementById('settingMpesaPaybillAccount').value = config.mpesaPaybillAccount || '';
+            document.getElementById('settingMpesaPochi').value = config.mpesaPochi || '';
+            document.getElementById('settingMpesaSend').value = config.mpesaSend || '';
             document.getElementById('settingVatRate').value = config.vatRate || 16;
             document.getElementById('settingReceiptFooter').value = config.receiptFooter || 'Thank you for shopping with us!';
             
@@ -3852,6 +4002,10 @@
             config.kraPin = document.getElementById('settingKraPin').value.trim();
             config.phone = document.getElementById('settingPhone').value.trim();
             config.mpesaTill = document.getElementById('settingMpesa').value.trim();
+            config.mpesaPaybillNumber = document.getElementById('settingMpesaPaybillNumber').value.trim();
+            config.mpesaPaybillAccount = document.getElementById('settingMpesaPaybillAccount').value.trim();
+            config.mpesaPochi = document.getElementById('settingMpesaPochi').value.trim();
+            config.mpesaSend = document.getElementById('settingMpesaSend').value.trim();
             config.vatRate = parseInt(document.getElementById('settingVatRate').value) || 16;
             config.receiptFooter = document.getElementById('settingReceiptFooter').value.trim();
             
@@ -4319,24 +4473,75 @@
         // Run on page load
         window.addEventListener('DOMContentLoaded', initApp);
         
-        // PWA Service Worker Registration
+        // PWA Service Worker Registration with Enhanced Offline Support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'biasharaflow-v1';
-                    const urlsToCache = ['/'];
+                    const CACHE_NAME = 'biasharaflow-v2';
+                    const urlsToCache = [
+                        './',
+                        './?standalone=true'
+                    ];
                     
                     self.addEventListener('install', (event) => {
+                        console.log('[ServiceWorker] Installing...');
                         event.waitUntil(
                             caches.open(CACHE_NAME)
-                                .then((cache) => cache.addAll(urlsToCache))
+                                .then((cache) => {
+                                    console.log('[ServiceWorker] Caching app shell');
+                                    return cache.addAll(urlsToCache);
+                                })
+                                .then(() => self.skipWaiting())
+                        );
+                    });
+                    
+                    self.addEventListener('activate', (event) => {
+                        console.log('[ServiceWorker] Activating...');
+                        event.waitUntil(
+                            caches.keys().then((cacheNames) => {
+                                return Promise.all(
+                                    cacheNames.map((cacheName) => {
+                                        if (cacheName !== CACHE_NAME) {
+                                            console.log('[ServiceWorker] Removing old cache:', cacheName);
+                                            return caches.delete(cacheName);
+                                        }
+                                    })
+                                );
+                            }).then(() => self.clients.claim())
                         );
                     });
                     
                     self.addEventListener('fetch', (event) => {
                         event.respondWith(
                             caches.match(event.request)
-                                .then((response) => response || fetch(event.request))
+                                .then((response) => {
+                                    // Cache hit - return response from cache
+                                    if (response) {
+                                        return response;
+                                    }
+                                    
+                                    // Clone the request
+                                    const fetchRequest = event.request.clone();
+                                    
+                                    return fetch(fetchRequest).then((response) => {
+                                        // Check if valid response
+                                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                                            return response;
+                                        }
+                                        
+                                        // Clone the response
+                                        const responseToCache = response.clone();
+                                        
+                                        caches.open(CACHE_NAME).then((cache) => {
+                                            cache.put(event.request, responseToCache);
+                                        });
+                                        
+                                        return response;
+                                    }).catch(() => {
+                                        // Network failed, return cached response if available
+                                        return caches.match(event.request);
+                                    });
+                                })
                         );
                     });
                 `;
@@ -4345,10 +4550,42 @@
                 const swUrl = URL.createObjectURL(blob);
                 
                 navigator.serviceWorker.register(swUrl)
-                    .then(() => console.log('PWA ready for installation'))
-                    .catch((err) => console.log('Service worker registration failed:', err));
+                    .then(() => console.log('[PWA] Service Worker registered - Offline mode available'))
+                    .catch((err) => console.log('[PWA] Service worker registration failed:', err));
             });
         }
+        
+        // Online/Offline Status Monitoring
+        function updateOnlineStatus() {
+            const isOnline = navigator.onLine;
+            const offlineBanner = document.getElementById('offlineBanner');
+            const syncStatus = document.getElementById('syncStatus');
+            const syncText = document.getElementById('syncText');
+            
+            if (isOnline) {
+                if (offlineBanner) offlineBanner.classList.add('hidden');
+                if (syncStatus) {
+                    syncStatus.classList.remove('offline');
+                    syncStatus.classList.add('online');
+                }
+                if (syncText) syncText.textContent = 'Online';
+                console.log('[Status] Online - Data will sync');
+            } else {
+                if (offlineBanner) offlineBanner.classList.remove('hidden');
+                if (syncStatus) {
+                    syncStatus.classList.remove('online');
+                    syncStatus.classList.add('offline');
+                }
+                if (syncText) syncText.textContent = 'Offline';
+                console.log('[Status] Offline - Working locally');
+            }
+        }
+        
+        // Monitor connection status
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        window.addEventListener('load', updateOnlineStatus);
+        
     </script>
 </body>
 </html>
