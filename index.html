@@ -421,11 +421,11 @@
             
             /* POS Layout */
             .pos-layout{grid-template-columns:1fr;gap:16px;height:auto}
-            .pos-cart{position:fixed;bottom:0;left:0;right:0;height:65vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;z-index:100;transform:translateY(calc(100% - 60px));transition:transform .3s;display:flex;flex-direction:column}
-            .pos-cart.expanded{transform:translateY(0)}
+            .pos-cart{position:fixed;bottom:0;left:0;right:0;height:70vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;z-index:100;transform:translateY(calc(100% - 60px));transition:transform .3s;display:flex;flex-direction:column}
+            .pos-cart.expanded{transform:translateY(0);box-shadow:0 -4px 20px rgba(0,0,0,0.5)}
             .cart-header{cursor:pointer;flex-shrink:0}
             .cart-items{flex:1;overflow-y:auto;min-height:0}
-            .cart-footer{flex-shrink:0;max-height:none;overflow-y:auto}
+            .cart-footer{flex-shrink:0;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
             .pos-product-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:calc(100vh - 200px)}
             .product-card{padding:12px}
             .product-emoji{font-size:2rem}
@@ -807,6 +807,11 @@
                         <span class="nav-item-icon">⚙️</span>Settings
                     </div>
                 </div>
+                <div class="nav-section">
+                    <div class="nav-item" onclick="logout()" style="color:var(--accent-red);border:1px solid var(--accent-red);margin-top:8px;">
+                        <span class="nav-item-icon">🚪</span>Logout
+                    </div>
+                </div>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-profile" onclick="showProfileModal()">
@@ -1002,14 +1007,14 @@
                                 <div class="cart-title">🛒 Current Sale <span class="cart-count" id="cartCount">0</span></div>
                                 <button class="cart-clear-btn" onclick="event.stopPropagation();clearCart()">Clear All</button>
                             </div>
-                            <div class="cart-items" id="cartItems">
+                            <div class="cart-items" id="cartItems" onclick="event.stopPropagation()">
                                 <div class="cart-empty">
                                     <div class="cart-empty-icon">🛒</div>
                                     <div class="cart-empty-text">Cart is empty</div>
                                     <div class="cart-empty-hint">Tap on products to add them</div>
                                 </div>
                             </div>
-                            <div class="cart-footer">
+                            <div class="cart-footer" onclick="event.stopPropagation()">
                                 <div class="cart-totals">
                                     <div class="cart-row subtotal"><span>Subtotal</span><span id="cartSubtotal">Ksh 0</span></div>
                                     <div class="cart-row tax"><span>VAT (16%)</span><span id="cartVat">Ksh 0</span></div>
@@ -2753,7 +2758,28 @@
             sidebar.classList.remove('show'); // Also remove mobile 'show' class
             document.getElementById('mobileOverlay').classList.remove('show'); 
         }
-        function toggleCartMobile() { document.getElementById('posCart').classList.toggle('expanded'); }
+        function toggleCartMobile() { 
+            const cart = document.getElementById('posCart');
+            cart.classList.toggle('expanded'); 
+        }
+        
+        // Prevent cart from closing when clicking inside cart content on mobile
+        document.addEventListener('DOMContentLoaded', () => {
+            const cartItems = document.getElementById('cartItems');
+            const cartFooter = document.querySelector('.cart-footer');
+            
+            if (cartItems) {
+                cartItems.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+            
+            if (cartFooter) {
+                cartFooter.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        });
         
         function renderAll() {
             renderDashboard();
