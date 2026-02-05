@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>DukaPOS Pro - Complete Business Management</title>
+    <title>BiasharaFlow POS - Complete Business Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -81,6 +81,7 @@
         .nav-badge.warning{background:var(--accent-yellow);color:#000}
         .nav-badge.info{background:var(--accent-blue)}
         .sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+        .sidebar-company{text-align:center;font-size:.65rem;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
         .user-profile{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-md);background:var(--bg-card);cursor:pointer;transition:all .2s}
         .user-profile:hover{background:var(--bg-card-hover)}
         .user-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
@@ -587,7 +588,7 @@
                     <span style="color:var(--text-secondary);font-size:.8rem">Click "First Time Setup" below to create your account</span>
                 </div>
                 <div class="login-logo">🏪</div>
-                <h1 class="login-title">DukaPOS Pro</h1>
+                <h1 class="login-title">BiasharaFlow POS</h1>
                 <p class="login-subtitle">Complete Business Management System</p>
                 <div class="login-form">
                     <div class="login-input-group">
@@ -649,7 +650,7 @@
             <div class="auth-screen" id="firstSetupForm">
                 <div class="back-btn" onclick="showAuthScreen('login')">← Back to Login</div>
                 <div class="login-logo">🎉</div>
-                <h1 class="login-title">Welcome to DukaPOS!</h1>
+                <h1 class="login-title">Welcome to BiasharaFlow POS!</h1>
                 <p class="login-subtitle">Create your admin account to get started</p>
                 <div class="login-form">
                     <div class="login-input-group">
@@ -707,7 +708,7 @@
                     <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary)">
                         💡 Code valid for a few minutes<br>
                         📱 Check your SMS inbox<br>
-                        🔒 Powered by Google Firebase
+                        🔒 Powered by Rudder Research and Data Analytics
                     </div>
                 </div>
             </div>
@@ -721,7 +722,7 @@
                 <div class="logo">
                     <div class="logo-icon">🏪</div>
                     <div>
-                        <div class="logo-text">DukaPOS Pro</div>
+                        <div class="logo-text">BiasharaFlow POS</div>
                         <div class="logo-subtitle">Business Management</div>
                     </div>
                 </div>
@@ -802,6 +803,7 @@
                     </div>
                     <button class="logout-btn" onclick="event.stopPropagation();logout()" title="Logout">🚪</button>
                 </div>
+                <div class="sidebar-company">Powered by Rudder Research<br>and Data Analytics</div>
             </div>
         </aside>
         
@@ -1813,7 +1815,6 @@
             </div>
         </div>
     </div>
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script>
         // ==================== FIREBASE CONFIGURATION ====================
         // ⚠️ IMPORTANT: Replace this with YOUR Firebase config after setup!
@@ -1854,7 +1855,7 @@
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         let config = { 
-            businessName: 'DukaPOS Business',
+            businessName: 'BiasharaFlow Business',
             businessId: '', // Unique ID for cloud sync
             cloudSyncEnabled: false,
             cloudSyncUrl: '', // Backend API URL
@@ -3126,7 +3127,8 @@
                     ${config.mpesaTill ? '<br>M-Pesa Till: ' + config.mpesaTill : ''}
                     <div class="receipt-kra">
                         ${config.kraPin ? 'KRA PIN: ' + config.kraPin + '<br>' : ''}
-                        eTIMS Invoice
+                        eTIMS Invoice<br>
+                        <br>Powered by Rudder Research and Data Analytics
                     </div>
                 </div>
             `;
@@ -4203,7 +4205,7 @@
             const creditData = creditSales.map(c => ({ Customer: c.customer, Phone: c.phone, Amount: c.amount, Paid: c.paid, Balance: c.amount - c.paid, Due: c.dueDate }));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(creditData), 'Credit Sales');
             
-            XLSX.writeFile(wb, `DukaPOS_Export_${getTodayDate()}.xlsx`);
+            XLSX.writeFile(wb, `BiasharaFlow_Export_${getTodayDate()}.xlsx`);
             showToast('Data exported to Excel', 'success');
         }
         
