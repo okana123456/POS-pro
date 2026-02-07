@@ -2772,10 +2772,22 @@
                     return;
                 }
                 
+                // ENHANCED: Track login with session ID and timestamp
+                const sessionId = 'SESSION_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 user.lastLogin = new Date().toISOString();
+                user.currentSessionId = sessionId;
+                user.loginHistory = user.loginHistory || [];
+                user.loginHistory.unshift({
+                    timestamp: new Date().toISOString(),
+                    sessionId: sessionId,
+                    action: 'login'
+                });
+                // Keep only last 50 login records
+                if (user.loginHistory.length > 50) user.loginHistory = user.loginHistory.slice(0, 50);
+                
                 currentUser = user;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
-                localStorage.setItem('lastLoggedUser', JSON.stringify(user)); // Persist across page refreshes
+                localStorage.setItem('lastLoggedUser', JSON.stringify(user));
                 saveAllData();
                 
                 if (config.businessId) {
@@ -3051,9 +3063,29 @@
         function logout() {
             if (currentUser) {
                 const userName = currentUser.name;
+                
+                // ENHANCED: Track logout in user's history
+                const user = users.find(u => u.username === currentUser.username);
+                if (user) {
+                    user.lastLogout = new Date().toISOString();
+                    user.loginHistory = user.loginHistory || [];
+                    user.loginHistory.unshift({
+                        timestamp: new Date().toISOString(),
+                        sessionId: user.currentSessionId,
+                        action: 'logout'
+                    });
+                    if (user.loginHistory.length > 50) user.loginHistory = user.loginHistory.slice(0, 50);
+                    saveAllData();
+                    
+                    // Sync logout to cloud
+                    if (config.businessId && db) {
+                        syncToCloud();
+                    }
+                }
+                
                 currentUser = null;
                 sessionStorage.removeItem('currentUser');
-                localStorage.removeItem('lastLoggedUser'); // Clear persisted user
+                localStorage.removeItem('lastLoggedUser');
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('appContainer').classList.add('hidden');
                 document.getElementById('loginUsername').value = '';
@@ -3138,6 +3170,10 @@
                     saveAllData();
                     
                     console.log('✅ User data loaded from Firestore');
+                    console.log('Config loaded:', config);
+                    
+                    // CRITICAL: Update M-Pesa display immediately after config loads
+                    setTimeout(() => updateMpesaDisplay(), 200);
                     
                     // Set up real-time listener for continuous sync
                     setupRealtimeSync(businessId);
@@ -4018,11 +4054,21 @@
                 profit,
                 paymentMethod: selectedPayment,
                 mpesaData: selectedPayment === 'M-Pesa' ? mpesaData : null,
-                cashier: currentUser.name
+                cashier: currentUser.name,
+                cashierUsername: currentUser.username, // Track seller username
+                cashierRole: currentUser.role, // Track if admin or seller
+                businessId: config.businessId || currentUser.businessId // Track business
             };
             
             sales.unshift(sale);
             localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+            
+            // CRITICAL: Immediately sync to cloud so admin sees seller's sales
+            if (config.businessId && db) {
+                syncToCloud().then(() => {
+                    console.log('✅ Sale synced to cloud - Admin will see this');
+                });
+            }
             
             // Update stock
             cart.forEach(item => {
@@ -4781,9 +4827,18 @@
                 return !u.businessId || u.businessId === myBusinessId;
             });
             
-            document.getElementById('usersTableBody').innerHTML = myBusinessUsers.map(u => `
+            document.getElementById('usersTableBody').innerHTML = myBusinessUsers.map(u => {
+                // Calculate seller's sales
+                const sellerSales = sales.filter(s => s.cashierUsername === u.username);
+                const sellerTotalSales = sellerSales.reduce((sum, s) => sum + s.total, 0);
+                const todaySales = sellerSales.filter(s => s.date === getTodayDate()).reduce((sum, s) => sum + s.total, 0);
+                
+                return `
                 <tr>
-                    <td><strong>${u.name}</strong><br><small style="color:var(--text-muted)">${u.email || 'No email'}</small></td>
+                    <td>
+                        <strong>${u.name}</strong><br>
+                        <small style="color:var(--text-muted)">${u.email || 'No email'}</small>
+                    </td>
                     <td>${u.username}</td>
                     <td>
                         <div style="display:flex;align-items:center;gap:8px">
@@ -4793,14 +4848,27 @@
                     </td>
                     <td><span class="table-status ${u.role === 'admin' ? 'info' : 'success'}">${u.role === 'admin' ? '👑 Admin' : '🛒 Seller'}</span></td>
                     <td><span class="table-status ${u.status === 'active' ? 'success' : 'danger'}">${u.status}</span></td>
-                    <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE') : 'Never'}</td>
+                    <td>
+                        <div style="font-size:0.85rem">
+                            <div><strong>Last Login:</strong><br>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE', {dateStyle: 'short', timeStyle: 'short'}) : 'Never'}</div>
+                            ${u.lastLogout ? `<div style="margin-top:4px;color:var(--text-muted)"><strong>Last Logout:</strong><br>${new Date(u.lastLogout).toLocaleString('en-KE', {dateStyle: 'short', timeStyle: 'short'})}</div>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size:0.85rem">
+                            <div><strong>Today:</strong> ${formatKsh(todaySales)}</div>
+                            <div style="margin-top:4px;color:var(--text-secondary)"><strong>Total:</strong> ${formatKsh(sellerTotalSales)}</div>
+                            <div style="margin-top:4px"><a href="#" onclick="filterSalesBySeller('${u.username}'); return false;" style="color:var(--accent-blue);text-decoration:none">📊 View Sales</a></div>
+                        </div>
+                    </td>
                     <td>
                         ${u.role === 'seller' ? `<button class="action-btn info" onclick="openPermissionsModal(${u.id})" title="Manage permissions">🔐 Permissions</button>` : ''}
                         <button class="action-btn primary" onclick="openResetPasswordModal(${u.id})">🔑 Reset</button>
                         ${u.id !== currentUser.id ? `<button class="action-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus(${u.id})">${u.status === 'active' ? 'Disable' : 'Enable'}</button>` : ''}
+                        ${u.role === 'seller' && u.loginHistory && u.loginHistory.length > 0 ? `<button class="action-btn" onclick="showLoginHistory(${u.id})" title="Login history">📋 History</button>` : ''}
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             
             // Show count
             console.log(`Showing ${myBusinessUsers.length} users from business ${myBusinessId}`);
@@ -4981,6 +5049,76 @@
         // ==================== SELLER PERMISSIONS ====================
         let permUserId = null;
         
+        function filterSalesBySeller(username) {
+            // Switch to sales tab and filter by seller
+            switchTab('sales');
+            
+            setTimeout(() => {
+                const seller = users.find(u => u.username === username);
+                if (!seller) return;
+                
+                // Filter sales by this seller
+                const sellerSales = sales.filter(s => s.cashierUsername === username);
+                
+                // Show seller-specific sales
+                const totalSales = sellerSales.reduce((sum, s) => sum + s.total, 0);
+                const todaySales = sellerSales.filter(s => s.date === getTodayDate()).reduce((sum, s) => sum + s.total, 0);
+                
+                showToast(`${seller.name}: ${sellerSales.length} sales totaling ${formatKsh(totalSales)}`, 'info', `Seller Performance`);
+                
+                // Update the sales table to show only this seller's sales
+                document.getElementById('salesTableBody').innerHTML = sellerSales.map(s => `
+                    <tr>
+                        <td><strong>${s.id}</strong><br><small>${s.date} ${s.time}</small></td>
+                        <td>${s.items.map(i => i.name + ' x' + i.qty).join(', ')}</td>
+                        <td>${formatKsh(s.total)}</td>
+                        <td><span class="table-badge payment-${s.paymentMethod?.toLowerCase().replace(/[^a-z]/g,'')}">${s.paymentMethod}</span></td>
+                        <td style="color:var(--accent-green);font-weight:600">${formatKsh(s.profit || 0)}</td>
+                        <td><strong>${s.cashier}</strong></td>
+                        <td><button class="action-btn" onclick="viewSaleDetails('${s.id}')">View</button></td>
+                    </tr>
+                `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">No sales from this seller</td></tr>';
+            }, 100);
+        }
+        
+        function showLoginHistory(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user || !user.loginHistory) return;
+            
+            const history = user.loginHistory.slice(0, 20); // Show last 20 records
+            
+            const historyHTML = history.map(h => {
+                const time = new Date(h.timestamp).toLocaleString('en-KE', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                });
+                const icon = h.action === 'login' ? '🟢' : '🔴';
+                const color = h.action === 'login' ? 'var(--accent-green)' : 'var(--accent-red)';
+                return `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
+                    <span>${icon} <strong style="color:${color}">${h.action.toUpperCase()}</strong></span>
+                    <span style="color:var(--text-muted);font-size:0.9rem">${time}</span>
+                </div>`;
+            }).join('');
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay show';
+            modal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">📋 ${user.name} - Login History</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    </div>
+                    <div class="modal-body" style="max-height:400px;overflow-y:auto">
+                        ${historyHTML || '<p style="text-align:center;color:var(--text-muted)">No login history</p>'}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="modal-btn" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
         function openPermissionsModal(userId) {
             permUserId = userId;
             const user = users.find(u => u.id === userId);
@@ -5129,8 +5267,11 @@
         
         // Update M-Pesa display in cart with saved till number
         function updateMpesaDisplay() {
+            console.log('updateMpesaDisplay called');
+            console.log('Config:', config);
+            
             const tillEl = document.getElementById('mpesaTillDisplay');
-            const labelEl = document.getElementById('mpesaPaymentLabel'); // We'll add this element
+            const labelEl = document.getElementById('mpesaPaymentLabel');
             
             if (tillEl) {
                 let displayText = '';
@@ -5140,29 +5281,40 @@
                 if (config.mpesaTill) {
                     displayText = config.mpesaTill;
                     labelText = '🏪 Buy Goods Till Number';
+                    console.log('Using Till:', config.mpesaTill);
                 } else if (config.mpesaPaybillNumber) {
                     displayText = config.mpesaPaybillNumber;
                     if (config.mpesaPaybillAccount) {
                         displayText += ' (Acc: ' + config.mpesaPaybillAccount + ')';
                     }
                     labelText = '🏢 Paybill Number' + (config.mpesaPaybillAccount ? ' & Account' : '');
+                    console.log('Using Paybill:', config.mpesaPaybillNumber);
                 } else if (config.mpesaPochi) {
                     displayText = config.mpesaPochi;
                     labelText = '💼 Pochi la Biashara Number';
+                    console.log('Using Pochi:', config.mpesaPochi);
                 } else if (config.mpesaSend) {
                     displayText = config.mpesaSend;
                     labelText = '💸 Send Money Number';
+                    console.log('Using Send Money:', config.mpesaSend);
                 } else {
                     displayText = 'Not set';
                     labelText = 'Till/Paybill Number';
+                    console.log('No payment method configured');
                 }
                 
                 tillEl.textContent = displayText;
+                console.log('Updated tillEl to:', displayText);
                 
                 // Update label if element exists
                 if (labelEl) {
                     labelEl.textContent = labelText;
+                    console.log('Updated labelEl to:', labelText);
+                } else {
+                    console.warn('labelEl not found');
                 }
+            } else {
+                console.error('tillEl not found!');
             }
         }
         
