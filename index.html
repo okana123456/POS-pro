@@ -2307,6 +2307,17 @@
                     
                     const userData = userDoc.data();
                     
+                    // CRITICAL: Update last login time in Firestore AND local users array
+                    const loginTime = new Date().toISOString();
+                    try {
+                        await db.collection('users').doc(firebaseUser.uid).update({
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log('✅ Login time updated in Firestore');
+                    } catch (error) {
+                        console.error('Failed to update login time:', error);
+                    }
+                    
                     // Sync password to Firestore if it's different (e.g., after password reset)
                     if (userData.password !== password) {
                         try {
@@ -2358,6 +2369,16 @@
                     try {
                         const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
                         const firebaseUser = userCredential.user;
+                        
+                        // CRITICAL: Update last login time in Firestore
+                        try {
+                            await db.collection('users').doc(firebaseUser.uid).update({
+                                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log('✅ Login time updated in Firestore');
+                        } catch (error) {
+                            console.error('Failed to update login time:', error);
+                        }
                         
                         // Sync password to Firestore if it's different (e.g., after password reset)
                         if (userData.password !== password) {
@@ -3135,13 +3156,7 @@
             document.getElementById('userAvatar').textContent = currentUser.name.substring(0, 2).toUpperCase();
             document.getElementById('userAvatar').className = 'user-avatar ' + currentUser.role;
             
-            // CRITICAL: Show business name for sellers
-            const subtitleEl = document.getElementById('welcomeSubtitle');
-            if (subtitleEl && currentUser.role === 'seller' && config.businessName) {
-                subtitleEl.innerHTML = `<strong style="color:var(--accent-blue)">🏪 ${config.businessName}</strong> • Your sales dashboard`;
-            } else if (subtitleEl) {
-                subtitleEl.textContent = "Here's what's happening with your business today";
-            }
+            // Business name will be set after config loads from loadUserData
             
             if (currentUser.role === 'seller') {
                 switchTab('pos');
@@ -3150,6 +3165,19 @@
                 switchTab('dashboard');
             }
             renderAll();
+        }
+        
+        // Update business name display (called after config loads)
+        function updateBusinessNameDisplay() {
+            const subtitleEl = document.getElementById('welcomeSubtitle');
+            if (!subtitleEl) return;
+            
+            if (currentUser && currentUser.role === 'seller' && config.businessName) {
+                subtitleEl.innerHTML = `<strong style="color:var(--accent-blue)">🏪 ${config.businessName}</strong> • Your sales dashboard`;
+                console.log('✅ Business name displayed:', config.businessName);
+            } else if (subtitleEl) {
+                subtitleEl.textContent = "Here's what's happening with your business today";
+            }
         }
         
         // Load user data from Firestore
@@ -3163,6 +3191,27 @@
                     // CRITICAL: Load users from cloud so sellers see admin's created users
                     if (data.users && data.users.length > 0) {
                         users = data.users;
+                        
+                        // CRITICAL: Fetch lastLogin times from Firestore users collection
+                        for (let user of users) {
+                            if (user.uid) {
+                                try {
+                                    const userDoc = await db.collection('users').doc(user.uid).get();
+                                    if (userDoc.exists) {
+                                        const userData = userDoc.data();
+                                        if (userData.lastLogin) {
+                                            user.lastLogin = userData.lastLogin.toDate ? userData.lastLogin.toDate().toISOString() : userData.lastLogin;
+                                        }
+                                        if (userData.lastLogout) {
+                                            user.lastLogout = userData.lastLogout.toDate ? userData.lastLogout.toDate().toISOString() : userData.lastLogout;
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error(`Failed to load login time for user ${user.username}:`, error);
+                                }
+                            }
+                        }
+                        console.log('✅ Users loaded with login times');
                     }
                     
                     // Load all data into local arrays
@@ -3184,9 +3233,13 @@
                     
                     console.log('✅ User data loaded from Firestore');
                     console.log('Config loaded:', config);
+                    console.log('Business name:', config.businessName);
                     
                     // CRITICAL: Update M-Pesa display immediately after config loads
                     setTimeout(() => updateMpesaDisplay(), 200);
+                    
+                    // CRITICAL: Update business name display for sellers after config loads
+                    setTimeout(() => updateBusinessNameDisplay(), 300);
                     
                     // Set up real-time listener for continuous sync
                     setupRealtimeSync(businessId);
@@ -3247,6 +3300,8 @@
                         
                         if (!cloudLastSync || cloudLastSync > localLastSync) {
                             console.log('📥 Receiving updates from cloud...');
+                            console.log(`Cloud sales count: ${data.sales?.length || 0}`);
+                            console.log(`Local sales count before: ${sales.length}`);
                             
                             // CRITICAL: Update users so admin and sellers stay in sync
                             if (data.users && data.users.length > 0) {
@@ -3261,6 +3316,8 @@
                             categories = data.categories || categories;
                             suppliers = data.suppliers || suppliers;
                             journalEntries = data.journalEntries || journalEntries;
+                            
+                            console.log(`Local sales count after: ${sales.length}`);
                             
                             // Update config but preserve local settings
                             const localBusinessId = config.businessId;
@@ -4084,11 +4141,22 @@
             sales.unshift(sale);
             localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
             
+            console.log(`✅ Sale created by ${currentUser.role} (${currentUser.username}):`, sale.id);
+            console.log(`Total sales in array: ${sales.length}`);
+            console.log(`Business ID: ${config.businessId}`);
+            
             // CRITICAL: Immediately sync to cloud so admin sees seller's sales
             if (config.businessId && db) {
-                syncToCloud().then(() => {
-                    console.log('✅ Sale synced to cloud - Admin will see this');
+                console.log(`⏫ Syncing ${sales.length} sales to cloud...`);
+                syncToCloud().then((success) => {
+                    if (success) {
+                        console.log('✅ Sale synced to cloud - Admin will see this');
+                    } else {
+                        console.warn('⚠️ Sync failed - sale saved locally only');
+                    }
                 });
+            } else {
+                console.warn('⚠️ No businessId or db - sync skipped');
             }
             
             // Update stock
