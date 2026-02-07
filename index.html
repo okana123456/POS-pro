@@ -886,7 +886,7 @@
                 <div class="tab-content active" id="dashboardTab">
                     <div class="welcome-section">
                         <h2 class="welcome-title">Welcome back, <span id="welcomeName">Admin</span>! 👋</h2>
-                        <p class="welcome-subtitle">Here's what's happening with your business today</p>
+                        <p class="welcome-subtitle" id="welcomeSubtitle">Here's what's happening with your business today</p>
                     </div>
                     
                     <div class="date-filter-bar">
@@ -3135,6 +3135,14 @@
             document.getElementById('userAvatar').textContent = currentUser.name.substring(0, 2).toUpperCase();
             document.getElementById('userAvatar').className = 'user-avatar ' + currentUser.role;
             
+            // CRITICAL: Show business name for sellers
+            const subtitleEl = document.getElementById('welcomeSubtitle');
+            if (subtitleEl && currentUser.role === 'seller' && config.businessName) {
+                subtitleEl.innerHTML = `<strong style="color:var(--accent-blue)">🏪 ${config.businessName}</strong> • Your sales dashboard`;
+            } else if (subtitleEl) {
+                subtitleEl.textContent = "Here's what's happening with your business today";
+            }
+            
             if (currentUser.role === 'seller') {
                 switchTab('pos');
                 document.getElementById('bottomNav').style.display = 'none';
@@ -3151,6 +3159,11 @@
                 
                 if (dataDoc.exists) {
                     const data = dataDoc.data();
+                    
+                    // CRITICAL: Load users from cloud so sellers see admin's created users
+                    if (data.users && data.users.length > 0) {
+                        users = data.users;
+                    }
                     
                     // Load all data into local arrays
                     products = data.products || [];
@@ -3235,6 +3248,11 @@
                         if (!cloudLastSync || cloudLastSync > localLastSync) {
                             console.log('📥 Receiving updates from cloud...');
                             
+                            // CRITICAL: Update users so admin and sellers stay in sync
+                            if (data.users && data.users.length > 0) {
+                                users = data.users;
+                            }
+                            
                             // Update local data
                             products = data.products || products;
                             sales = data.sales || sales;
@@ -3248,6 +3266,9 @@
                             const localBusinessId = config.businessId;
                             config = { ...data.config, businessId: localBusinessId };
                             config.lastSyncTime = cloudLastSync ? cloudLastSync.toISOString() : new Date().toISOString();
+                            
+                            // CRITICAL: Update M-Pesa display when config changes
+                            updateMpesaDisplay();
                             
                             // Save to localStorage
                             saveAllDataWithoutSync(); // Don't trigger another sync
@@ -4865,6 +4886,7 @@
                         ${u.role === 'seller' ? `<button class="action-btn info" onclick="openPermissionsModal(${u.id})" title="Manage permissions">🔐 Permissions</button>` : ''}
                         <button class="action-btn primary" onclick="openResetPasswordModal(${u.id})">🔑 Reset</button>
                         ${u.id !== currentUser.id ? `<button class="action-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus(${u.id})">${u.status === 'active' ? 'Disable' : 'Enable'}</button>` : ''}
+                        ${u.id !== currentUser.id ? `<button class="action-btn danger" onclick="deleteUser(${u.id})" title="Delete permanently">🗑️ Delete</button>` : ''}
                         ${u.role === 'seller' && u.loginHistory && u.loginHistory.length > 0 ? `<button class="action-btn" onclick="showLoginHistory(${u.id})" title="Login history">📋 History</button>` : ''}
                     </td>
                 </tr>
@@ -5043,6 +5065,69 @@
                 user.status = user.status === 'active' ? 'inactive' : 'active';
                 localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
                 renderUsers();
+            }
+        }
+        
+        // Delete user permanently
+        async function deleteUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            // Prevent deleting yourself
+            if (user.id === currentUser.id) {
+                showToast('❌ Cannot delete your own account', 'error');
+                return;
+            }
+            
+            // Confirm deletion
+            const confirmMsg = `⚠️ DELETE ${user.name}?\n\n` +
+                `This will permanently remove:\n` +
+                `• User account and login access\n` +
+                `• All permissions\n` +
+                `• Firebase authentication\n\n` +
+                `⚠️ This CANNOT be undone!\n\n` +
+                `Type DELETE to confirm:`;
+            
+            const confirmation = prompt(confirmMsg);
+            if (confirmation !== 'DELETE') {
+                showToast('Delete cancelled', 'info');
+                return;
+            }
+            
+            try {
+                showToast('Deleting user...', 'info');
+                
+                // Remove from local array
+                const userIndex = users.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    users.splice(userIndex, 1);
+                }
+                
+                // Save locally
+                localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                
+                // Delete from Firebase Firestore if user has uid
+                if (user.uid && db) {
+                    try {
+                        await db.collection('users').doc(user.uid).delete();
+                        console.log('✅ User deleted from Firestore');
+                    } catch (error) {
+                        console.error('Error deleting from Firestore:', error);
+                    }
+                }
+                
+                // Sync to cloud immediately so all users see the change
+                if (config.businessId && db) {
+                    await syncToCloud();
+                    console.log('✅ User deletion synced to cloud');
+                }
+                
+                showToast(`✅ ${user.name} deleted successfully`, 'success');
+                renderUsers();
+                
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showToast('❌ Failed to delete user', 'error');
             }
         }
         
@@ -5253,6 +5338,13 @@
             
             localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
             
+            // CRITICAL: Sync settings to cloud so sellers see payment updates immediately
+            if (config.businessId && db) {
+                syncToCloud().then(() => {
+                    console.log('✅ Settings synced to cloud - All sellers will see updates');
+                });
+            }
+            
             // CRITICAL FIX: Update M-Pesa display in POS cart immediately
             updateMpesaDisplay();
             
@@ -5262,7 +5354,7 @@
                 renderPOS(); // Re-render POS to update payment modal
             }
             
-            showToast('✅ Settings saved and applied!', 'success');
+            showToast('✅ Settings saved and synced!', 'success');
         }
         
         // Update M-Pesa display in cart with saved till number
@@ -5606,8 +5698,14 @@
             }
             
             try {
+                // CRITICAL: Filter users to only sync those from this business
+                const businessUsers = users.filter(u => 
+                    !u.businessId || u.businessId === config.businessId
+                );
+                
                 // Add timestamp to track when this sync happened
                 const syncData = {
+                    users: businessUsers, // CRITICAL: Sync users so admin and sellers share user list
                     products: products,
                     sales: sales,
                     creditSales: creditSales,
