@@ -611,11 +611,12 @@
         .login-loading.show{display:flex}
         .spinner{width:60px;height:60px;border:4px solid rgba(59,130,246,0.2);border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes errorShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
         .login-loading-text{color:var(--text-primary);font-size:1.1rem;font-weight:600}
         
         /* Error Message */
-        .login-error{display:none;margin-bottom:20px;padding:14px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);color:var(--accent-red);font-size:0.9rem;text-align:center}
-        .login-error.show{display:block}
+        .login-error{display:none;margin-bottom:20px;padding:14px 16px;background:rgba(239,68,68,0.15);border:2px solid rgba(239,68,68,0.5);border-radius:var(--radius-md);color:#ff6b6b;font-size:0.95rem;font-weight:600;text-align:center;box-shadow:0 4px 6px rgba(239,68,68,0.2)}
+        .login-error.show{display:block;animation:errorShake 0.4s ease}
     </style>
 </head>
 <body>
@@ -2407,6 +2408,9 @@
         
         // Helper function for demo account login
         function handleDemoLogin(demoUser) {
+            // Load comprehensive demo data (1 year past + 3 months future)
+            loadExtendedDemoData();
+            
             currentUser = {
                 id: 'DEMO_' + demoUser.role.toUpperCase(),
                 name: demoUser.name,
@@ -2422,7 +2426,222 @@
             localStorage.setItem('lastLoggedUser', JSON.stringify(currentUser));
             
             showApp();
-            showToast(`Welcome to Demo Mode, ${demoUser.name}!`, 'success');
+            showToast(`Welcome to Demo Mode, ${demoUser.name}! 📊 Loaded 15 months of sample data`, 'success');
+        }
+        
+        // Extended demo data loader - 1 year past + 3 months future
+        function loadExtendedDemoData() {
+            // Business configuration
+            config = { 
+                businessName: 'Demo Supermarket - Nairobi CBD', 
+                kraPin: 'P051234567X', 
+                phone: '0712345678', 
+                mpesaTill: '7028833',
+                mpesaPaybillNumber: '400200',
+                mpesaPaybillAccount: 'DEMO2024',
+                vatRate: 16,
+                receiptFooter: 'Thank you for your business! Karibu tena.',
+                isRealUser: false,
+                businessId: 'DEMO_BUSINESS'
+            };
+            
+            // Comprehensive categories
+            categories = ['Maize Flour', 'Sugar', 'Rice', 'Cooking Oil', 'Milk', 'Tea', 'Coffee', 'Soft Drinks', 'Water', 'Bread', 'Soap', 'Detergent', 'Snacks', 'Cereals', 'Spices', 'Pasta', 'Beans'];
+            
+            // Extensive product catalog
+            products = [
+                {id:'P001',sku:'MAI10245',name:'Jogoo Maize Flour 2kg',category:'Maize Flour',cost:165,price:185,stock:50,reorder:20,vat:16},
+                {id:'P002',sku:'MAI10352',name:'Pembe Maize Flour 2kg',category:'Maize Flour',cost:158,price:175,stock:45,reorder:15,vat:16},
+                {id:'P003',sku:'MAI10468',name:'Exe Maize Flour 2kg',category:'Maize Flour',cost:162,price:180,stock:38,reorder:15,vat:16},
+                {id:'P004',sku:'SUG20145',name:'Mumias Sugar 1kg',category:'Sugar',cost:145,price:165,stock:60,reorder:25,vat:16},
+                {id:'P005',sku:'SUG20256',name:'Kabras Sugar 1kg',category:'Sugar',cost:142,price:162,stock:55,reorder:20,vat:16},
+                {id:'P006',sku:'SUG20378',name:'Sony Sugar 1kg',category:'Sugar',cost:140,price:160,stock:48,reorder:20,vat:16},
+                {id:'P007',sku:'RIC30125',name:'Pishori Rice 1kg',category:'Rice',cost:180,price:220,stock:40,reorder:15,vat:16},
+                {id:'P008',sku:'RIC30247',name:'Sindano Rice 1kg',category:'Rice',cost:120,price:150,stock:52,reorder:15,vat:16},
+                {id:'P009',sku:'RIC30389',name:'Basmati Rice 1kg',category:'Rice',cost:250,price:300,stock:25,reorder:10,vat:16},
+                {id:'P010',sku:'OIL40156',name:'Elianto Cooking Oil 1L',category:'Cooking Oil',cost:280,price:320,stock:35,reorder:15,vat:16},
+                {id:'P011',sku:'OIL40278',name:'Fresh Fri Cooking Oil 2L',category:'Cooking Oil',cost:520,price:600,stock:28,reorder:12,vat:16},
+                {id:'P012',sku:'OIL40391',name:'Kimbo 500g',category:'Cooking Oil',cost:180,price:210,stock:42,reorder:15,vat:16},
+                {id:'P013',sku:'MLK50134',name:'Brookside Fresh Milk 500ml',category:'Milk',cost:55,price:70,stock:50,reorder:30,vat:0},
+                {id:'P014',sku:'MLK50245',name:'Tuzo UHT Milk 500ml',category:'Milk',cost:52,price:68,stock:60,reorder:35,vat:0},
+                {id:'P015',sku:'TEA60123',name:'Ketepa Tea 100g',category:'Tea',cost:110,price:140,stock:40,reorder:20,vat:16},
+                {id:'P016',sku:'TEA60234',name:'Chai ya Baba Tea 100g',category:'Tea',cost:95,price:125,stock:35,reorder:18,vat:16},
+                {id:'P017',sku:'COF70145',name:'Dormans Coffee 100g',category:'Coffee',cost:180,price:230,stock:20,reorder:10,vat:16},
+                {id:'P018',sku:'SDK80167',name:'Coca Cola 500ml',category:'Soft Drinks',cost:60,price:80,stock:48,reorder:24,vat:16},
+                {id:'P019',sku:'SDK80278',name:'Fanta Orange 500ml',category:'Soft Drinks',cost:58,price:75,stock:36,reorder:20,vat:16},
+                {id:'P020',sku:'SDK80389',name:'Sprite 500ml',category:'Soft Drinks',cost:58,price:75,stock:40,reorder:20,vat:16},
+                {id:'P021',sku:'WAT90123',name:'Keringet Water 500ml',category:'Water',cost:25,price:40,stock:60,reorder:30,vat:16},
+                {id:'P022',sku:'WAT90234',name:'Dasani Water 500ml',category:'Water',cost:28,price:45,stock:55,reorder:28,vat:16},
+                {id:'P023',sku:'BRD10145',name:'Supa Loaf Bread 400g',category:'Bread',cost:52,price:65,stock:20,reorder:10,vat:0},
+                {id:'P024',sku:'BRD10256',name:'Festive Bread 450g',category:'Bread',cost:55,price:68,stock:18,reorder:10,vat:0},
+                {id:'P025',sku:'SOP11167',name:'Jamaa Bar Soap',category:'Soap',cost:45,price:60,stock:100,reorder:30,vat:16},
+                {id:'P026',sku:'SOP11278',name:'Geisha Bar Soap',category:'Soap',cost:48,price:63,stock:85,reorder:28,vat:16},
+                {id:'P027',sku:'DET12189',name:'Omo Detergent 500g',category:'Detergent',cost:120,price:150,stock:45,reorder:15,vat:16},
+                {id:'P028',sku:'DET12290',name:'Ariel Detergent 500g',category:'Detergent',cost:125,price:155,stock:38,reorder:12,vat:16},
+                {id:'P029',sku:'SNK13101',name:'Tropical Heat Crisps',category:'Snacks',cost:10,price:20,stock:150,reorder:50,vat:16},
+                {id:'P030',sku:'SNK13212',name:'Big G Peanuts 50g',category:'Snacks',cost:15,price:30,stock:120,reorder:40,vat:16}
+            ];
+            
+            // Generate sales for last 12 months + next 3 months (15 months total)
+            const today = new Date();
+            sales = [];
+            let saleIdCounter = 1000;
+            
+            // Past 12 months of data
+            for (let monthsAgo = 12; monthsAgo >= 0; monthsAgo--) {
+                const monthDate = new Date(today);
+                monthDate.setMonth(monthDate.getMonth() - monthsAgo);
+                const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const saleDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+                    const dateStr = saleDate.toISOString().split('T')[0];
+                    
+                    // Generate 10-30 sales per day
+                    const numSales = 10 + Math.floor(Math.random() * 20);
+                    
+                    for (let i = 0; i < numSales; i++) {
+                        const numItems = 1 + Math.floor(Math.random() * 4); // 1-4 items per sale
+                        const items = [];
+                        let subtotal = 0;
+                        let totalVat = 0;
+                        let totalCost = 0;
+                        
+                        for (let j = 0; j < numItems; j++) {
+                            const p = products[Math.floor(Math.random() * products.length)];
+                            const qty = 1 + Math.floor(Math.random() * 3);
+                            const itemSubtotal = p.price * qty;
+                            const itemVat = p.vat === 16 ? Math.round(itemSubtotal * 16 / 116) : 0;
+                            
+                            items.push({
+                                productId: p.id,
+                                name: p.name,
+                                qty: qty,
+                                price: p.price,
+                                cost: p.cost,
+                                vat: p.vat
+                            });
+                            
+                            subtotal += itemSubtotal;
+                            totalVat += itemVat;
+                            totalCost += p.cost * qty;
+                        }
+                        
+                        const paymentMethods = ['Cash', 'M-Pesa', 'M-Pesa', 'Cash', 'Credit']; // More M-Pesa
+                        const hour = 7 + Math.floor(Math.random() * 13); // 7 AM to 8 PM
+                        const minute = Math.floor(Math.random() * 60);
+                        
+                        sales.push({
+                            id: 'S' + (saleIdCounter++),
+                            date: dateStr,
+                            time: `${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}`,
+                            items: items,
+                            subtotal: subtotal,
+                            vat: totalVat,
+                            total: subtotal,
+                            profit: subtotal - totalCost,
+                            paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+                            cashier: Math.random() > 0.5 ? 'Demo Admin' : 'Demo Seller'
+                        });
+                    }
+                }
+            }
+            
+            // Future 3 months of projected data (lighter sales)
+            for (let monthsAhead = 1; monthsAhead <= 3; monthsAhead++) {
+                const futureMonth = new Date(today);
+                futureMonth.setMonth(futureMonth.getMonth() + monthsAhead);
+                const daysInMonth = new Date(futureMonth.getFullYear(), futureMonth.getMonth() + 1, 0).getDate();
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const saleDate = new Date(futureMonth.getFullYear(), futureMonth.getMonth(), day);
+                    const dateStr = saleDate.toISOString().split('T')[0];
+                    
+                    // Projected sales (fewer, for forecasting)
+                    const numSales = 5 + Math.floor(Math.random() * 10);
+                    
+                    for (let i = 0; i < numSales; i++) {
+                        const p = products[Math.floor(Math.random() * products.length)];
+                        const qty = 1 + Math.floor(Math.random() * 2);
+                        const itemSubtotal = p.price * qty;
+                        const itemVat = p.vat === 16 ? Math.round(itemSubtotal * 16 / 116) : 0;
+                        
+                        sales.push({
+                            id: 'SF' + (saleIdCounter++), // F for Future
+                            date: dateStr,
+                            time: '12:00',
+                            items: [{
+                                productId: p.id,
+                                name: p.name,
+                                qty: qty,
+                                price: p.price,
+                                cost: p.cost,
+                                vat: p.vat
+                            }],
+                            subtotal: itemSubtotal,
+                            vat: itemVat,
+                            total: itemSubtotal,
+                            profit: (p.price - p.cost) * qty,
+                            paymentMethod: 'Cash',
+                            cashier: 'Projected'
+                        });
+                    }
+                }
+            }
+            
+            // Credit sales
+            creditSales = [
+                { id: 'CR1', customer: 'Mama Njeri', phone: '0712345678', amount: 2500, paid: 1000, date: getTodayDate(), dueDate: '2026-02-15' },
+                { id: 'CR2', customer: 'John Kamau', phone: '0722111222', amount: 4200, paid: 2000, date: getTodayDate(), dueDate: '2026-02-20' },
+                { id: 'CR3', customer: 'Wanjiku Stores', phone: '0733444555', amount: 8500, paid: 5000, date: '2025-12-15', dueDate: '2026-01-15' },
+                { id: 'CR4', customer: 'Peter Ochieng', phone: '0744666777', amount: 3200, paid: 3200, date: '2025-11-20', dueDate: '2025-12-20' },
+                { id: 'CR5', customer: 'Grace Muthoni', phone: '0755888999', amount: 5600, paid: 2000, date: getTodayDate(), dueDate: '2026-03-01' }
+            ];
+            
+            // Expenses across the year
+            expenses = [];
+            let expenseId = 1;
+            for (let monthsAgo = 12; monthsAgo >= 0; monthsAgo--) {
+                const expMonth = new Date(today);
+                expMonth.setMonth(expMonth.getMonth() - monthsAgo);
+                const dateStr = expMonth.toISOString().split('T')[0];
+                
+                // Monthly recurring expenses
+                expenses.push(
+                    { id: 'E' + (expenseId++), date: dateStr, category: 'Rent', description: 'Monthly shop rent', amount: 25000, ref: 'RNT-' + expenseId, recordedBy: 'Admin' },
+                    { id: 'E' + (expenseId++), date: dateStr, category: 'Utilities', description: 'Electricity bill - KPLC', amount: 2500 + Math.floor(Math.random() * 1500), ref: 'KPLC-' + expenseId, recordedBy: 'Admin' },
+                    { id: 'E' + (expenseId++), date: dateStr, category: 'Salaries', description: 'Staff salaries', amount: 35000, ref: 'SAL-' + expenseId, recordedBy: 'Admin' }
+                );
+                
+                // Random occasional expenses
+                if (Math.random() > 0.5) {
+                    expenses.push(
+                        { id: 'E' + (expenseId++), date: dateStr, category: 'Transport', description: 'Stock delivery', amount: 1500 + Math.floor(Math.random() * 1000), ref: '', recordedBy: 'Admin' }
+                    );
+                }
+                if (Math.random() > 0.7) {
+                    expenses.push(
+                        { id: 'E' + (expenseId++), date: dateStr, category: 'Maintenance', description: 'Shop repairs', amount: 3000 + Math.floor(Math.random() * 5000), ref: '', recordedBy: 'Admin' }
+                    );
+                }
+            }
+            
+            // Suppliers
+            suppliers = [
+                { id: 'SUP1', name: 'Unga Group Ltd', contact: 'James Mwangi', phone: '0720123456', email: 'sales@unga.co.ke', products: 'Maize Flour, Wheat Flour' },
+                { id: 'SUP2', name: 'Mumias Sugar Company', contact: 'Mary Akinyi', phone: '0733987654', email: 'orders@mumias.co.ke', products: 'Sugar, Sweeteners' },
+                { id: 'SUP3', name: 'Bidco Africa', contact: 'David Otieno', phone: '0744556677', email: 'sales@bidco.co.ke', products: 'Cooking Oil, Soap, Detergents' },
+                { id: 'SUP4', name: 'Brookside Dairy', contact: 'Sarah Wangari', phone: '0755889900', email: 'orders@brookside.co.ke', products: 'Milk, Dairy Products' },
+                { id: 'SUP5', name: 'KWAL Beverages', contact: 'Simon Mutua', phone: '0766112233', email: 'sales@coca-cola.co.ke', products: 'Soft Drinks, Water' }
+            ];
+            
+            // Journal entries (sample accounting entries)
+            journalEntries = [
+                { id: 'J001', date: getTodayDate(), description: 'Monthly sales revenue', debit: 'Cash', credit: 'Sales Revenue', amount: 450000, ref: 'Monthly closing' },
+                { id: 'J002', date: getTodayDate(), description: 'Rent expense payment', debit: 'Rent Expense', credit: 'Cash', amount: 25000, ref: 'RNT-001' }
+            ];
+            
+            saveAllData();
         }
         
         // Helper functions for login UI
@@ -2437,10 +2656,21 @@
         }
         
         function showLoginError(message) {
+            console.log('🔴 Login Error:', message); // Debug log
             const errorEl = document.getElementById('loginError');
             if (errorEl) {
                 errorEl.textContent = '❌ ' + message;
                 errorEl.classList.add('show');
+                errorEl.style.display = 'block'; // Force display
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    if (errorEl.classList.contains('show')) {
+                        hideLoginError();
+                    }
+                }, 8000);
+            } else {
+                console.error('Error element not found!');
             }
         }
         
@@ -2448,6 +2678,7 @@
             const errorEl = document.getElementById('loginError');
             if (errorEl) {
                 errorEl.classList.remove('show');
+                errorEl.style.display = 'none';
                 errorEl.textContent = '';
             }
         }
