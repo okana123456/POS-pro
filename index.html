@@ -605,6 +605,17 @@
         .offline-banner{position:fixed;top:64px;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;padding:12px 24px;text-align:center;font-weight:600;font-size:.9rem;z-index:60;box-shadow:0 4px 6px rgba(0,0,0,0.3);animation:slideDown .3s ease}
         .offline-banner.hidden{display:none}
         @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+        
+        /* Loading Spinner */
+        .login-loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+        .login-loading.show{display:flex}
+        .spinner{width:60px;height:60px;border:4px solid rgba(59,130,246,0.2);border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .login-loading-text{color:var(--text-primary);font-size:1.1rem;font-weight:600}
+        
+        /* Error Message */
+        .login-error{display:none;margin-bottom:20px;padding:14px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);color:var(--accent-red);font-size:0.9rem;text-align:center}
+        .login-error.show{display:block}
     </style>
 </head>
 <body>
@@ -616,6 +627,9 @@
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
+            <!-- Error Message -->
+            <div class="login-error" id="loginError"></div>
+            
             <!-- Login Form -->
             <div class="auth-screen active" id="loginForm">
                 <div style="margin-bottom:16px;padding:12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:var(--radius-sm);font-size:.85rem;text-align:center">
@@ -712,6 +726,13 @@
                         <label class="login-label">Confirm Password *</label>
                         <input type="password" class="login-input" id="setupPasswordConfirm" placeholder="Re-enter password">
                     </div>
+                    <div class="login-input-group">
+                        <label class="login-label">Admin Authorization Key *</label>
+                        <input type="password" class="login-input" id="setupSecretKey" placeholder="Enter admin authorization key">
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">
+                            🔒 Contact the system administrator for the authorization key
+                        </div>
+                    </div>
                     <button class="login-btn" onclick="handleFirstTimeSetup()">🚀 Create Account</button>
                     <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary)">
                         ✅ 100% FREE - No billing required<br>
@@ -724,6 +745,13 @@
             <!-- Email auth - no OTP needed -->
         </div>
     </div>
+    
+    <!-- Loading Spinner Overlay -->
+    <div class="login-loading" id="loginLoading">
+        <div class="spinner"></div>
+        <div class="login-loading-text">Logging you in...</div>
+    </div>
+    
     <!-- Main App -->
     <div class="app-container hidden" id="appContainer">
         <!-- Sidebar -->
@@ -2178,22 +2206,53 @@
             const emailOrUsername = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
             
+            // Clear previous error
+            hideLoginError();
+            
             if (!emailOrUsername || !password) { 
-                showToast('Please enter email/username and password', 'error'); 
+                showLoginError('Please enter email/username and password');
                 return; 
+            }
+            
+            // Show loading spinner
+            showLoginLoading();
+            
+            // Check for demo accounts FIRST
+            const demoAccounts = {
+                'admin@biasharaflow.demo': { password: 'demo2024', role: 'admin', name: 'Demo Admin', username: 'demoadmin' },
+                'seller@biasharaflow.demo': { password: 'demo2024', role: 'seller', name: 'Demo Seller', username: 'demoseller' }
+            };
+            
+            if (demoAccounts[emailOrUsername] && demoAccounts[emailOrUsername].password === password) {
+                const demoUser = demoAccounts[emailOrUsername];
+                const selectedType = document.getElementById('selectedLoginType').value;
+                
+                if (demoUser.role !== selectedType) {
+                    hideLoginLoading();
+                    showLoginError(`This is a ${demoUser.role} account. Please select the correct login type.`);
+                    return;
+                }
+                
+                // Simulate network delay for realistic feel
+                setTimeout(() => {
+                    hideLoginLoading();
+                    handleDemoLogin(demoUser);
+                }, 1500);
+                return;
             }
             
             // Check if offline or Firebase not configured
             if (!navigator.onLine || !auth || !db) {
                 console.log('Offline mode or Firebase not configured - using local login');
                 showToast(navigator.onLine ? 'Firebase not configured! Using demo mode.' : 'Offline mode - using local data', 'warning');
-                handleLocalLogin(emailOrUsername, password);
+                setTimeout(() => {
+                    hideLoginLoading();
+                    handleLocalLogin(emailOrUsername, password);
+                }, 1000);
                 return;
             }
             
             try {
-                showToast('Logging in...', 'info');
-                
                 // If it looks like an email, use Firebase auth
                 const isEmail = emailOrUsername.includes('@');
                 
@@ -2206,7 +2265,8 @@
                     const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
                     
                     if (!userDoc.exists) {
-                        showToast('User data not found', 'error');
+                        hideLoginLoading();
+                        showLoginError('User data not found');
                         await auth.signOut();
                         return;
                     }
@@ -2229,7 +2289,8 @@
                     // Validate user role matches selected login type
                     const selectedType = document.getElementById('selectedLoginType').value;
                     if (userData.role !== selectedType) {
-                        showToast(`❌ This account is ${userData.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`, 'error');
+                        hideLoginLoading();
+                        showLoginError(`This account is ${userData.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
                         await auth.signOut();
                         return;
                     }
@@ -2237,6 +2298,7 @@
                     // Load business data
                     await loadUserData(userData.businessId);
                     
+                    hideLoginLoading();
                     // Show app
                     showApp(userData.name, userData.username, userData.role, userData.businessId);
                     showToast(`Welcome back, ${userData.name}!`, 'success');
@@ -2249,7 +2311,8 @@
                         .get();
                     
                     if (usersSnapshot.empty) {
-                        showToast('❌ Invalid username or password', 'error');
+                        hideLoginLoading();
+                        showLoginError('Invalid username or password');
                         return;
                     }
                     
@@ -2278,7 +2341,8 @@
                         // Validate user role matches selected login type
                         const selectedType = document.getElementById('selectedLoginType').value;
                         if (userData.role !== selectedType) {
-                            showToast(`❌ This account is ${userData.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`, 'error');
+                            hideLoginLoading();
+                            showLoginError(`This account is ${userData.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
                             await auth.signOut();
                             return;
                         }
@@ -2286,15 +2350,17 @@
                         // Load business data
                         await loadUserData(userData.businessId);
                         
+                        hideLoginLoading();
                         // Show app
                         showApp(userData.name, userData.username, userData.role, userData.businessId);
                         showToast(`Welcome back, ${userData.name}!`, 'success');
                     } catch (authError) {
+                        hideLoginLoading();
                         // If Firebase auth fails, it means wrong password
                         if (authError.code === 'auth/wrong-password') {
-                            showToast('❌ Wrong password. Please try again.', 'error');
+                            showLoginError('Wrong password. Please try again.');
                         } else {
-                            showToast('❌ Login failed. Please try again.', 'error');
+                            showLoginError('Login failed. Please try again.');
                         }
                         return;
                     }
@@ -2307,30 +2373,82 @@
                 if (error.code === 'auth/network-request-failed' || error.message.includes('network') || error.message.includes('offline')) {
                     console.log('Network error detected - switching to offline mode');
                     showToast('Network error - trying offline mode...', 'warning');
-                    handleLocalLogin(emailOrUsername, password);
+                    setTimeout(() => {
+                        hideLoginLoading();
+                        handleLocalLogin(emailOrUsername, password);
+                    }, 1000);
                     return;
                 }
+                
+                hideLoginLoading();
                 
                 // Clear, user-friendly error messages
                 let errorMsg = '';
                 
                 if (error.code === 'auth/user-not-found') {
-                    errorMsg = '❌ No account found with this email. Please check your email or sign up.';
+                    errorMsg = 'No account found with this email. Please check your email or sign up.';
                 } else if (error.code === 'auth/wrong-password') {
-                    errorMsg = '❌ Wrong password. Please try again or reset your password.';
+                    errorMsg = 'Wrong password. Please try again or reset your password.';
                 } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = '❌ Invalid email format. Please enter a valid email address.';
+                    errorMsg = 'Invalid email format. Please enter a valid email address.';
                 } else if (error.code === 'auth/invalid-credential') {
-                    errorMsg = '❌ Invalid email or password. Please try again.';
+                    errorMsg = 'Invalid email or password. Please try again.';
                 } else if (error.code === 'auth/too-many-requests') {
-                    errorMsg = '❌ Too many failed attempts. Please try again in a few minutes.';
+                    errorMsg = 'Too many failed attempts. Please try again in a few minutes.';
                 } else if (error.code === 'auth/user-disabled') {
-                    errorMsg = '❌ This account has been disabled. Contact support.';
+                    errorMsg = 'This account has been disabled. Contact support.';
                 } else {
-                    errorMsg = '❌ Login failed. ' + (error.message || 'Please try again.');
+                    errorMsg = 'Login failed. ' + (error.message || 'Please try again.');
                 }
                 
-                showToast(errorMsg, 'error');
+                showLoginError(errorMsg);
+            }
+        }
+        
+        // Helper function for demo account login
+        function handleDemoLogin(demoUser) {
+            currentUser = {
+                id: 'DEMO_' + demoUser.role.toUpperCase(),
+                name: demoUser.name,
+                username: demoUser.username,
+                email: demoUser.role + '@biasharaflow.demo',
+                role: demoUser.role,
+                status: 'active',
+                businessId: 'DEMO_BUSINESS',
+                lastLogin: new Date().toISOString()
+            };
+            
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            localStorage.setItem('lastLoggedUser', JSON.stringify(currentUser));
+            
+            showApp();
+            showToast(`Welcome to Demo Mode, ${demoUser.name}!`, 'success');
+        }
+        
+        // Helper functions for login UI
+        function showLoginLoading() {
+            const loading = document.getElementById('loginLoading');
+            if (loading) loading.classList.add('show');
+        }
+        
+        function hideLoginLoading() {
+            const loading = document.getElementById('loginLoading');
+            if (loading) loading.classList.remove('show');
+        }
+        
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            if (errorEl) {
+                errorEl.textContent = '❌ ' + message;
+                errorEl.classList.add('show');
+            }
+        }
+        
+        function hideLoginError() {
+            const errorEl = document.getElementById('loginError');
+            if (errorEl) {
+                errorEl.classList.remove('show');
+                errorEl.textContent = '';
             }
         }
         
@@ -2370,14 +2488,14 @@
             
             if (user) {
                 if (user.status !== 'active') { 
-                    showToast('Account is inactive', 'error'); 
+                    showLoginError('Account is inactive');
                     return; 
                 }
                 
                 // Validate user role matches selected login type
                 const selectedType = document.getElementById('selectedLoginType').value;
                 if (user.role !== selectedType) {
-                    showToast(`❌ This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`, 'error');
+                    showLoginError(`This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
                     return;
                 }
                 
@@ -2394,7 +2512,7 @@
                 showApp();
                 showToast(`Welcome back, ${user.name}!`, 'success');
             } else {
-                showToast('❌ Wrong email or password. Try again.', 'error');
+                showLoginError('Wrong email or password. Try again.');
             }
         }
         
@@ -2423,6 +2541,14 @@
             const username = document.getElementById('setupUsername').value.trim();
             const password = document.getElementById('setupPassword').value;
             const passwordConfirm = document.getElementById('setupPasswordConfirm').value;
+            const secretKey = document.getElementById('setupSecretKey').value.trim();
+            
+            // CRITICAL: Validate admin authorization key FIRST
+            const ADMIN_SECRET_KEY = 'BF2024ADMIN';  // Change this to your own secret key
+            if (secretKey !== ADMIN_SECRET_KEY) {
+                showToast('❌ Invalid authorization key. Contact the system administrator.', 'error');
+                return;
+            }
             
             // Validation
             if (!businessName || !name || !email || !username || !password || !passwordConfirm) {
