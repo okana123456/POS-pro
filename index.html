@@ -641,24 +641,20 @@
                     <span style="margin:0 8px;color:var(--text-muted)">•</span>
                     <span class="login-link" onclick="showAuthScreen('firstSetup')">First Time Setup</span>
                 </div>
-                <div class="login-divider" id="demoSection"><span>Quick Demo Access</span></div>
-                <div class="demo-accounts" id="demoAccounts">
-                    <div class="demo-btn admin" onclick="demoLogin('admin')">
-                        <div class="demo-btn-icon">👑</div>
-                        <div class="demo-btn-role">Admin</div>
-                        <div class="demo-btn-desc">Full Access</div>
-                    </div>
-                    <div class="demo-btn seller" onclick="demoLogin('seller')">
-                        <div class="demo-btn-icon">🛒</div>
-                        <div class="demo-btn-role">Seller</div>
-                        <div class="demo-btn-desc">POS Only</div>
-                    </div>
+                <div class="login-divider" id="loginTypeSection"><span>Login As</span></div>
+                <div class="login-type-buttons" id="loginTypeButtons" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+                    <button class="login-type-btn" onclick="selectLoginType('admin')" id="adminLoginBtn" style="padding:16px;background:var(--bg-dark);border:2px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:all .2s;text-align:center">
+                        <div style="font-size:2rem;margin-bottom:8px">👑</div>
+                        <div style="font-size:.9rem;font-weight:600;color:var(--text-primary)">Admin Login</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">Full System Access</div>
+                    </button>
+                    <button class="login-type-btn" onclick="selectLoginType('seller')" id="sellerLoginBtn" style="padding:16px;background:var(--bg-dark);border:2px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:all .2s;text-align:center">
+                        <div style="font-size:2rem;margin-bottom:8px">🛒</div>
+                        <div style="font-size:.9rem;font-weight:600;color:var(--text-primary)">Seller Login</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">POS Only Access</div>
+                    </button>
                 </div>
-                <div class="demo-credentials" id="demoCredentials">
-                    <div class="demo-credentials-title">🔑 Demo Login Credentials</div>
-                    <div class="demo-credentials-item">👑 Admin: admin / admin123</div>
-                    <div class="demo-credentials-item">🛒 Seller: seller / seller123</div>
-                </div>
+                <input type="hidden" id="selectedLoginType" value="admin">
             </div>
 
             <!-- REMOVED: Signup Form (admin-only user creation now) -->
@@ -1481,7 +1477,7 @@
                     </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
                             <tbody id="usersTableBody"></tbody>
                         </table>
                     </div>
@@ -2054,8 +2050,8 @@
             adminMpesaAccount: ''
         };
         let users = [
-            { id: 1, name: 'Admin User', email: 'admin@dukapos.com', username: 'admin', password: 'admin123', role: 'admin', status: 'active', lastLogin: null },
-            { id: 2, name: 'Sales Staff', email: 'seller@dukapos.com', username: 'seller', password: 'seller123', role: 'seller', status: 'active', lastLogin: null }
+            { id: 1, name: 'Admin User', email: 'admin@biasharaflow.demo', username: 'admin', password: 'demo2024', role: 'admin', status: 'active', lastLogin: null },
+            { id: 2, name: 'Sales Staff', email: 'seller@biasharaflow.demo', username: 'seller', password: 'demo2024', role: 'seller', status: 'active', lastLogin: null }
         ];
         let products = [], sales = [], creditSales = [], expenses = [], categories = [], suppliers = [], journalEntries = [];
         let cart = [], selectedPayment = 'Cash', selectedCategory = 'All', quickAddProduct = null, quickAddQty = 1;
@@ -2089,6 +2085,11 @@
             
             // Hide demo accounts if real user exists
             updateDemoVisibility();
+            
+            // Initialize Admin login button as selected by default
+            setTimeout(() => {
+                selectLoginType('admin');
+            }, 100);
             
             // Check if user is already logged in
             const savedUser = sessionStorage.getItem('currentUser');
@@ -2212,6 +2213,27 @@
                     
                     const userData = userDoc.data();
                     
+                    // Sync password to Firestore if it's different (e.g., after password reset)
+                    if (userData.password !== password) {
+                        try {
+                            await db.collection('users').doc(firebaseUser.uid).update({
+                                password: password,
+                                passwordLastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log('Password synced to Firestore');
+                        } catch (error) {
+                            console.error('Failed to sync password:', error);
+                        }
+                    }
+                    
+                    // Validate user role matches selected login type
+                    const selectedType = document.getElementById('selectedLoginType').value;
+                    if (userData.role !== selectedType) {
+                        showToast(`❌ This account is ${userData.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`, 'error');
+                        await auth.signOut();
+                        return;
+                    }
+                    
                     // Load business data
                     await loadUserData(userData.businessId);
                     
@@ -2220,30 +2242,62 @@
                     showToast(`Welcome back, ${userData.name}!`, 'success');
                     
                 } else {
-                    // Username login - need to find user by username in Firestore
+                    // Username login - need to find user by username in Firestore to get their email
                     const usersSnapshot = await db.collection('users')
                         .where('username', '==', emailOrUsername)
-                        .where('password', '==', password)
                         .limit(1)
                         .get();
                     
                     if (usersSnapshot.empty) {
-                        showToast('Invalid credentials', 'error');
+                        showToast('❌ Invalid username or password', 'error');
                         return;
                     }
                     
                     const userData = usersSnapshot.docs[0].data();
                     const userEmail = userData.email;
                     
-                    // Sign in with Firebase using the email
-                    const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
-                    
-                    // Load business data
-                    await loadUserData(userData.businessId);
-                    
-                    // Show app
-                    showApp(userData.name, userData.username, userData.role, userData.businessId);
-                    showToast(`Welcome back, ${userData.name}!`, 'success');
+                    // Sign in with Firebase using the email and password
+                    // This will validate against Firebase Auth (which has the updated password after reset)
+                    try {
+                        const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
+                        const firebaseUser = userCredential.user;
+                        
+                        // Sync password to Firestore if it's different (e.g., after password reset)
+                        if (userData.password !== password) {
+                            try {
+                                await db.collection('users').doc(firebaseUser.uid).update({
+                                    password: password,
+                                    passwordLastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                console.log('Password synced to Firestore');
+                            } catch (error) {
+                                console.error('Failed to sync password:', error);
+                            }
+                        }
+                        
+                        // Validate user role matches selected login type
+                        const selectedType = document.getElementById('selectedLoginType').value;
+                        if (userData.role !== selectedType) {
+                            showToast(`❌ This account is ${userData.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`, 'error');
+                            await auth.signOut();
+                            return;
+                        }
+                        
+                        // Load business data
+                        await loadUserData(userData.businessId);
+                        
+                        // Show app
+                        showApp(userData.name, userData.username, userData.role, userData.businessId);
+                        showToast(`Welcome back, ${userData.name}!`, 'success');
+                    } catch (authError) {
+                        // If Firebase auth fails, it means wrong password
+                        if (authError.code === 'auth/wrong-password') {
+                            showToast('❌ Wrong password. Please try again.', 'error');
+                        } else {
+                            showToast('❌ Login failed. Please try again.', 'error');
+                        }
+                        return;
+                    }
                 }
                 
             } catch (error) {
@@ -2252,21 +2306,28 @@
                 // If network error or Firebase unavailable, try local login
                 if (error.code === 'auth/network-request-failed' || error.message.includes('network') || error.message.includes('offline')) {
                     console.log('Network error detected - switching to offline mode');
-                    showToast('Network error - using offline mode', 'warning');
+                    showToast('Network error - trying offline mode...', 'warning');
                     handleLocalLogin(emailOrUsername, password);
                     return;
                 }
                 
-                let errorMsg = 'Login failed. ';
+                // Clear, user-friendly error messages
+                let errorMsg = '';
                 
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMsg += 'Invalid email or password.';
+                if (error.code === 'auth/user-not-found') {
+                    errorMsg = '❌ No account found with this email. Please check your email or sign up.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMsg = '❌ Wrong password. Please try again or reset your password.';
                 } else if (error.code === 'auth/invalid-email') {
-                    errorMsg += 'Invalid email format.';
+                    errorMsg = '❌ Invalid email format. Please enter a valid email address.';
+                } else if (error.code === 'auth/invalid-credential') {
+                    errorMsg = '❌ Invalid email or password. Please try again.';
                 } else if (error.code === 'auth/too-many-requests') {
-                    errorMsg += 'Too many attempts. Try again later.';
+                    errorMsg = '❌ Too many failed attempts. Please try again in a few minutes.';
+                } else if (error.code === 'auth/user-disabled') {
+                    errorMsg = '❌ This account has been disabled. Contact support.';
                 } else {
-                    errorMsg += error.message;
+                    errorMsg = '❌ Login failed. ' + (error.message || 'Please try again.');
                 }
                 
                 showToast(errorMsg, 'error');
@@ -2312,6 +2373,14 @@
                     showToast('Account is inactive', 'error'); 
                     return; 
                 }
+                
+                // Validate user role matches selected login type
+                const selectedType = document.getElementById('selectedLoginType').value;
+                if (user.role !== selectedType) {
+                    showToast(`❌ This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`, 'error');
+                    return;
+                }
+                
                 user.lastLogin = new Date().toISOString();
                 currentUser = user;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
@@ -2325,7 +2394,7 @@
                 showApp();
                 showToast(`Welcome back, ${user.name}!`, 'success');
             } else {
-                showToast('Invalid credentials. Try: admin/admin123 or seller/seller123', 'error');
+                showToast('❌ Wrong email or password. Try again.', 'error');
             }
         }
         
@@ -2532,7 +2601,7 @@
                 console.log('Password reset email sent successfully to:', email);
                 
                 setTimeout(() => {
-                    showToast('📧 Check your inbox and spam folder for the reset link', 'info');
+                    showToast('📧 After resetting your password, login with your new password. Your password will be automatically synced.', 'info');
                 }, 1500);
                 
                 // Go back to login after showing success
@@ -2844,20 +2913,42 @@
         }
         
         // ==================== SUBSCRIPTION MANAGEMENT ====================
+        function selectLoginType(type) {
+            // Update selected login type
+            document.getElementById('selectedLoginType').value = type;
+            
+            // Update button styles to show selection
+            const adminBtn = document.getElementById('adminLoginBtn');
+            const sellerBtn = document.getElementById('sellerLoginBtn');
+            
+            if (type === 'admin') {
+                adminBtn.style.borderColor = 'var(--accent-purple)';
+                adminBtn.style.background = 'rgba(139,92,246,0.1)';
+                sellerBtn.style.borderColor = 'var(--border)';
+                sellerBtn.style.background = 'var(--bg-dark)';
+            } else {
+                sellerBtn.style.borderColor = 'var(--accent-green)';
+                sellerBtn.style.background = 'rgba(16,185,129,0.1)';
+                adminBtn.style.borderColor = 'var(--border)';
+                adminBtn.style.background = 'var(--bg-dark)';
+            }
+            
+            showToast(`${type === 'admin' ? '👑 Admin' : '🛒 Seller'} login selected`, 'info');
+        }
+        
         function updateDemoVisibility() {
-            // Hide demo accounts if real user exists
-            const demoSection = document.getElementById('demoSection');
-            const demoAccounts = document.getElementById('demoAccounts');
-            const demoCredentials = document.getElementById('demoCredentials');
+            // Hide/show login type buttons based on real user status
+            const loginTypeSection = document.getElementById('loginTypeSection');
+            const loginTypeButtons = document.getElementById('loginTypeButtons');
             
             if (config.isRealUser) {
-                if (demoSection) demoSection.style.display = 'none';
-                if (demoAccounts) demoAccounts.style.display = 'none';
-                if (demoCredentials) demoCredentials.style.display = 'none';
+                // For real users, still show the buttons (they're for role selection, not demo)
+                if (loginTypeSection) loginTypeSection.style.display = 'flex';
+                if (loginTypeButtons) loginTypeButtons.style.display = 'grid';
             } else {
-                if (demoSection) demoSection.style.display = 'flex';
-                if (demoAccounts) demoAccounts.style.display = 'grid';
-                if (demoCredentials) demoCredentials.style.display = 'block';
+                // For demo/testing, still show the buttons
+                if (loginTypeSection) loginTypeSection.style.display = 'flex';
+                if (loginTypeButtons) loginTypeButtons.style.display = 'grid';
             }
         }
         
@@ -4175,6 +4266,12 @@
                 <tr>
                     <td><strong>${u.name}</strong><br><small style="color:var(--text-muted)">${u.email || 'No email'}</small></td>
                     <td>${u.username}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <code style="background:var(--bg-dark);padding:4px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.85rem">${u.password || '••••••'}</code>
+                            <button onclick="copyToClipboard('${u.password}', 'Password copied!')" style="background:transparent;border:none;cursor:pointer;font-size:1rem" title="Copy password">📋</button>
+                        </div>
+                    </td>
                     <td><span class="table-status ${u.role === 'admin' ? 'info' : 'success'}">${u.role === 'admin' ? '👑 Admin' : '🛒 Seller'}</span></td>
                     <td><span class="table-status ${u.status === 'active' ? 'success' : 'danger'}">${u.status}</span></td>
                     <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE') : 'Never'}</td>
@@ -4184,6 +4281,33 @@
                     </td>
                 </tr>
             `).join('');
+        }
+        
+        // Helper function to copy text to clipboard
+        function copyToClipboard(text, successMsg) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(successMsg || 'Copied to clipboard!', 'success');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Failed to copy', 'error');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(successMsg || 'Copied to clipboard!', 'success');
+                } catch (err) {
+                    showToast('Failed to copy', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
         }
         
         // UPDATED: Admin-only access to add user modal
