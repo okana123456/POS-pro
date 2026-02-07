@@ -1087,7 +1087,7 @@
                                             <div style="text-align:center; margin-bottom:12px;">
                                                 <div style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:8px;">Customer Pays To:</div>
                                                 <div style="font-size:2.2rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace; letter-spacing:2px;" id="mpesaTillDisplay">Not set</div>
-                                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Till/Paybill Number</div>
+                                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;" id="mpesaPaymentLabel">Till/Paybill Number</div>
                                             </div>
                                             <div style="border-top:1px solid rgba(16,185,129,0.3); padding-top:12px; margin-top:12px;">
                                                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1924,6 +1924,39 @@
                 <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" class="form-input" id="resetConfirmPassword" placeholder="Confirm new password"></div>
             </div>
             <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('resetPasswordModal')">Cancel</button><button class="modal-btn success" onclick="confirmPasswordReset()">Reset Password</button></div>
+        </div>
+    </div>
+    
+    <!-- Seller Permissions Modal -->
+    <div class="modal-overlay" id="permissionsModal" onclick="if(event.target===this)closeModal('permissionsModal')">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">🔐 Seller Permissions</h3><button class="modal-close" onclick="closeModal('permissionsModal')">×</button></div>
+            <div class="modal-body">
+                <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.9rem">Control what <strong id="permUserName"></strong> can access:</p>
+                <div style="display:grid;gap:12px">
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-dark);border-radius:8px;cursor:pointer">
+                        <input type="checkbox" id="permEditInventory" style="width:18px;height:18px;cursor:pointer">
+                        <div style="flex:1"><div style="font-weight:600">📦 Edit Inventory</div><div style="font-size:0.8rem;color:var(--text-muted)">Add, update, delete products</div></div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-dark);border-radius:8px;cursor:pointer">
+                        <input type="checkbox" id="permEditPrices" style="width:18px;height:18px;cursor:pointer">
+                        <div style="flex:1"><div style="font-weight:600">💰 Edit Prices</div><div style="font-size:0.8rem;color:var(--text-muted)">Change product prices</div></div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-dark);border-radius:8px;cursor:pointer">
+                        <input type="checkbox" id="permDeleteSales" style="width:18px;height:18px;cursor:pointer">
+                        <div style="flex:1"><div style="font-weight:600">🗑️ Delete Sales</div><div style="font-size:0.8rem;color:var(--text-muted)">Remove transactions</div></div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-dark);border-radius:8px;cursor:pointer">
+                        <input type="checkbox" id="permViewReports" style="width:18px;height:18px;cursor:pointer">
+                        <div style="flex:1"><div style="font-weight:600">📊 View Reports</div><div style="font-size:0.8rem;color:var(--text-muted)">Access analytics</div></div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-dark);border-radius:8px;cursor:pointer">
+                        <input type="checkbox" id="permManageExpenses" style="width:18px;height:18px;cursor:pointer">
+                        <div style="flex:1"><div style="font-weight:600">💸 Manage Expenses</div><div style="font-size:0.8rem;color:var(--text-muted)">Add and edit expenses</div></div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('permissionsModal')">Cancel</button><button class="modal-btn success" onclick="savePermissions()">Save Permissions</button></div>
         </div>
     </div>
     
@@ -4762,6 +4795,7 @@
                     <td><span class="table-status ${u.status === 'active' ? 'success' : 'danger'}">${u.status}</span></td>
                     <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE') : 'Never'}</td>
                     <td>
+                        ${u.role === 'seller' ? `<button class="action-btn info" onclick="openPermissionsModal(${u.id})" title="Manage permissions">🔐 Permissions</button>` : ''}
                         <button class="action-btn primary" onclick="openResetPasswordModal(${u.id})">🔑 Reset</button>
                         ${u.id !== currentUser.id ? `<button class="action-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus(${u.id})">${u.status === 'active' ? 'Disable' : 'Enable'}</button>` : ''}
                     </td>
@@ -4808,8 +4842,8 @@
             openModal('addUserModal'); 
         }
         
-        // UPDATED: Admin-only user creation with credential display
-        function addNewUser() {
+        // UPDATED: Admin-only user creation with Firebase sync and permissions
+        async function addNewUser() {
             if (currentUser?.role !== 'admin') {
                 showToast("Only admin can create users", "error");
                 return;
@@ -4834,23 +4868,73 @@
                 return;
             }
 
-            // CRITICAL: Assign user to current admin's business
+            const businessId = config.businessId || currentUser.businessId;
+            
+            // CRITICAL: Assign user to current admin's business with permissions
             const newUser = {
                 id: Date.now(),
                 name, email, username, password,
                 role, status: 'active', lastLogin: null,
-                businessId: config.businessId || currentUser.businessId // Link to admin's business
+                businessId: businessId,
+                createdBy: currentUser.username,
+                createdAt: new Date().toISOString(),
+                permissions: role === 'seller' ? {
+                    canEditInventory: false,
+                    canEditPrices: false,
+                    canDeleteSales: false,
+                    canViewReports: false,
+                    canManageExpenses: false
+                } : null
             };
 
             users.push(newUser);
-
             saveAllData();
+
+            try {
+                // CRITICAL FIX: Create Firebase Auth account for the user
+                if (auth && db) {
+                    showToast('Creating user in Firebase...', 'info');
+                    
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const firebaseUser = userCredential.user;
+                    
+                    await db.collection('users').doc(firebaseUser.uid).set({
+                        businessId: businessId,
+                        name: name,
+                        username: username,
+                        password: password,
+                        email: email,
+                        role: role,
+                        status: 'active',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: currentUser.username,
+                        permissions: newUser.permissions
+                    });
+                    
+                    newUser.uid = firebaseUser.uid;
+                    const userIndex = users.findIndex(u => u.id === newUser.id);
+                    if (userIndex !== -1) users[userIndex] = newUser;
+                    
+                    saveAllData();
+                    await auth.signOut();
+                    
+                    if (currentUser.email && currentUser.password) {
+                        await auth.signInWithEmailAndPassword(currentUser.email, currentUser.password);
+                    }
+                    
+                    showToast(`✅ ${name} created and synced!`, 'success');
+                } else {
+                    showToast('⚠️ Created locally (offline)', 'warning');
+                }
+            } catch (error) {
+                console.error('Firebase user creation error:', error);
+                showToast('⚠️ Created locally, will sync later', 'warning');
+            }
+
             closeModal('addUserModal');
 
-            // Show credentials clearly
-            const msg = `User created!\n\nUsername: ${username}\nPassword: ${password}\nEmail: ${email}\nRole: ${role}\n\nCopy and send to the employee (WhatsApp/SMS).`;
-            alert(msg);  // or use your showToast / custom modal
-            showToast("User created - credentials shown", "success");
+            const msg = `✅ User Created!\n\n👤 ${name}\n📧 ${email}\n🔑 ${username}\n🔒 ${password}\n👔 ${role}\n\n📱 Share via WhatsApp/SMS`;
+            alert(msg);
             renderUsers();
         }
         
@@ -4892,6 +4976,68 @@
                 localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
                 renderUsers();
             }
+        }
+        
+        // ==================== SELLER PERMISSIONS ====================
+        let permUserId = null;
+        
+        function openPermissionsModal(userId) {
+            permUserId = userId;
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            document.getElementById('permUserName').textContent = user.name;
+            
+            // Load current permissions
+            const perms = user.permissions || {
+                canEditInventory: false,
+                canEditPrices: false,
+                canDeleteSales: false,
+                canViewReports: false,
+                canManageExpenses: false
+            };
+            
+            document.getElementById('permEditInventory').checked = perms.canEditInventory || false;
+            document.getElementById('permEditPrices').checked = perms.canEditPrices || false;
+            document.getElementById('permDeleteSales').checked = perms.canDeleteSales || false;
+            document.getElementById('permViewReports').checked = perms.canViewReports || false;
+            document.getElementById('permManageExpenses').checked = perms.canManageExpenses || false;
+            
+            openModal('permissionsModal');
+        }
+        
+        async function savePermissions() {
+            const user = users.find(u => u.id === permUserId);
+            if (!user) return;
+            
+            user.permissions = {
+                canEditInventory: document.getElementById('permEditInventory').checked,
+                canEditPrices: document.getElementById('permEditPrices').checked,
+                canDeleteSales: document.getElementById('permDeleteSales').checked,
+                canViewReports: document.getElementById('permViewReports').checked,
+                canManageExpenses: document.getElementById('permManageExpenses').checked
+            };
+            
+            saveAllData();
+            
+            // Also update in Firestore if available
+            if (db && user.uid) {
+                try {
+                    await db.collection('users').doc(user.uid).update({
+                        permissions: user.permissions,
+                        permissionsUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast('✅ Permissions updated and synced!', 'success');
+                } catch (error) {
+                    console.error('Error updating permissions in Firestore:', error);
+                    showToast('✅ Permissions saved locally', 'success');
+                }
+            } else {
+                showToast('✅ Permissions saved locally', 'success');
+            }
+            
+            closeModal('permissionsModal');
+            renderUsers();
         }
         
         // ==================== SETTINGS ====================
@@ -4984,18 +5130,38 @@
         // Update M-Pesa display in cart with saved till number
         function updateMpesaDisplay() {
             const tillEl = document.getElementById('mpesaTillDisplay');
+            const labelEl = document.getElementById('mpesaPaymentLabel'); // We'll add this element
+            
             if (tillEl) {
+                let displayText = '';
+                let labelText = 'Till/Paybill Number';
+                
                 // Priority: Till > Paybill > Pochi > Send Money
                 if (config.mpesaTill) {
-                    tillEl.textContent = config.mpesaTill;
+                    displayText = config.mpesaTill;
+                    labelText = '🏪 Buy Goods Till Number';
                 } else if (config.mpesaPaybillNumber) {
-                    tillEl.textContent = config.mpesaPaybillNumber + (config.mpesaPaybillAccount ? ' (Acc: ' + config.mpesaPaybillAccount + ')' : '');
+                    displayText = config.mpesaPaybillNumber;
+                    if (config.mpesaPaybillAccount) {
+                        displayText += ' (Acc: ' + config.mpesaPaybillAccount + ')';
+                    }
+                    labelText = '🏢 Paybill Number' + (config.mpesaPaybillAccount ? ' & Account' : '');
                 } else if (config.mpesaPochi) {
-                    tillEl.textContent = config.mpesaPochi;
+                    displayText = config.mpesaPochi;
+                    labelText = '💼 Pochi la Biashara Number';
                 } else if (config.mpesaSend) {
-                    tillEl.textContent = config.mpesaSend;
+                    displayText = config.mpesaSend;
+                    labelText = '💸 Send Money Number';
                 } else {
-                    tillEl.textContent = 'Not set';
+                    displayText = 'Not set';
+                    labelText = 'Till/Paybill Number';
+                }
+                
+                tillEl.textContent = displayText;
+                
+                // Update label if element exists
+                if (labelEl) {
+                    labelEl.textContent = labelText;
                 }
             }
         }
